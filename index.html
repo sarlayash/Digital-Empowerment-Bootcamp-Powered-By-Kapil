@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Digital Empowerment Bootcamp Powered By Kapil - Part 1</title>
+  
+  <!-- PWA Metadata & Mobile Optimizations -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KapilBootcamp">
+  <link rel="apple-touch-icon" href="./icons/icon-192.svg">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti & jsPDF CDN for Badge/Certificate Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    /* Smooth mobile scrolling & touches */
+    html, body {
+      overscroll-behavior-y: contain;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wheel-pointer {
+      width: 0; 
+      height: 0; 
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 26px solid #ef4444;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- PWA Install Prompt Banner for Phones -->
+  <div id="pwaInstallBanner" class="bg-gradient-to-r from-indigo-700 via-sky-600 to-emerald-600 px-4 py-2.5 text-xs text-white flex items-center justify-between shadow-lg">
+    <div class="flex items-center space-x-2">
+      <i class="fa-solid fa-mobile-screen-button text-base animate-pulse"></i>
+      <span><strong>Install App on Phone:</strong> Zero laptop constraints, works offline anytime!</span>
+    </div>
+    <button onclick="promptInstallPWA()" class="px-3 py-1 bg-white text-indigo-950 font-bold rounded-lg shadow hover:bg-slate-100 transition text-[11px] shrink-0">
+      <i class="fa-solid fa-download mr-1"></i> Install Now
+    </button>
+  </div>
+
+  <!-- Main Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Logo & Branding -->
+      <div class="flex items-center space-x-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-sky-500 to-emerald-400 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-500/20">
+          K
+        </div>
+        <div>
+          <h1 class="text-sm md:text-base font-extrabold tracking-tight text-white flex items-center gap-2">
+            Digital Empowerment Bootcamp
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Part 1</span>
+          </h1>
+          <p class="text-[11px] text-slate-400">Powered By Kapil • Zero to Infinity (Zero Assumptions)</p>
+        </div>
+      </div>
+
+      <!-- Controls & Google Authentication -->
+      <div class="flex items-center space-x-3">
+        
+        <!-- Live Clock & Drip Lock Status -->
+        <div id="timeGatePill" class="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="windowStatusText">WINDOW ACTIVE: 08:00 AM - 08:00 PM</span>
+          <span class="text-slate-500">|</span>
+          <span id="liveClockDisplay" class="font-bold">--:--:--</span>
+        </div>
+
+        <!-- Mentor / Testing Override Button -->
+        <button onclick="toggleTestMode()" title="Toggle Mentor Test Mode to preview and unlock all days without time constraint" class="hidden md:flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition">
+          <i class="fa-solid fa-key"></i> Test Unlock
+        </button>
+
+        <!-- Install Button for Desktop / Direct -->
+        <button onclick="promptInstallPWA()" title="Install app on phone or PC" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600/50 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> <span class="hidden md:inline">App</span>
+        </button>
+
+        <!-- Google OAuth Authentication Area -->
+        <div id="authContainer">
+          <button id="googleSignInBtn" class="flex items-center space-x-2 bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs px-3.5 py-1.5 rounded-lg shadow transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Google Sign-In</span>
+          </button>
+
+          <div id="userProfile" class="hidden flex items-center space-x-2.5 cursor-pointer" onclick="triggerGoogleAuth()">
+            <img id="userAvatar" src="" class="w-8 h-8 rounded-full border border-indigo-400 shadow" alt="Avatar">
+            <div class="text-left hidden md:block">
+              <p id="userName" class="text-xs font-bold text-white"></p>
+              <p id="userEmail" class="text-[10px] text-slate-400"></p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Mobile Bottom Quick Navigation -->
+  <div class="md:hidden flex border-b border-slate-800 bg-slate-900 px-2 py-1.5 overflow-x-auto text-[11px] gap-2">
+    <button onclick="switchTab('notes')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Notes</button>
+    <button onclick="switchTab('pretest')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Pre-Test</button>
+    <button onclick="switchTab('ide')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Cloud IDE</button>
+    <button onclick="switchTab('assessment')" class="px-2.5 py-1 rounded bg-indigo-600 text-white font-bold">100 Qs Mock</button>
+    <button onclick="switchTab('credentials')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Badges</button>
+  </div>
+
+  <!-- Main Grid Layout -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Session Selector & Spinning Wheel (4 cols) -->
+    <div class="lg:col-span-4 space-y-4">
+      
+      <!-- Day / Session Selector -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+          <span>Bootcamp Schedule</span>
+          <span class="text-[10px] text-indigo-400 font-mono">15 Hours Total</span>
+        </h2>
+
+        <div class="space-y-3">
+          <!-- Day 1 Card -->
+          <div id="day1Card" onclick="selectDay(1)" class="cursor-pointer border-2 border-indigo-500 bg-indigo-950/40 rounded-xl p-3.5 transition">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-indigo-400 uppercase">Day 1 • 6 Hours</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">Active Window</span>
+            </div>
+            <h3 class="text-sm font-bold text-white">IT Foundation, OS, MS-Word & Basics of C</h3>
+            <p class="text-xs text-slate-400 mt-1">Zero to Infinity • 100 Qs Mock • Day 1 Badge</p>
+          </div>
+
+          <!-- Day 2 Card -->
+          <div id="day2Card" onclick="selectDay(2)" class="cursor-pointer border border-slate-800 bg-slate-900/60 rounded-xl p-3.5 transition hover:border-slate-700">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-slate-400 uppercase">Day 2 • 6 Hours</span>
+              <span id="day2LockBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-lock text-[9px]"></i> Unlocks 08:00 AM
+              </span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-200">Modular C, Recursion, RDBMS & MS-Excel</h3>
+            <p class="text-xs text-slate-500 mt-1">Procedural Mastery • 100 Qs Mock • Day 2 Badge</p>
+          </div>
+
+          <!-- Day 3 Card -->
+          <div id="day3Card" onclick="selectDay(3)" class="cursor-pointer border border-slate-800 bg-slate-900/60 rounded-xl p-3.5 transition hover:border-slate-700">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-slate-400 uppercase">Day 3 • 3 Hours</span>
+              <span id="day3LockBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-lock text-[9px]"></i> Grand Finale
+              </span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-200">HTML, CSS Colors & JavaScript Variables</h3>
+            <p class="text-xs text-slate-500 mt-1">Web Synergy • 100 Qs Mock • Master Certificate</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Spinning Wheel Game -->
+      <div class="bg-gradient-to-br from-indigo-950/60 to-slate-900 border border-indigo-900/50 rounded-2xl p-4 shadow-xl text-center relative">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-trophy"></i> Daily Gamification
+          </span>
+          <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-mono">1 Spin / Day</span>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-1">Spin & Win Rewards</h3>
+        <p class="text-xs text-slate-300 mb-3">Earn XP boosts, cheat-sheets & 50/50 mock lifelines!</p>
+
+        <!-- Canvas Wheel Element -->
+        <div class="relative w-48 h-48 mx-auto flex items-center justify-center my-1">
+          <div class="wheel-pointer absolute top-0 z-20"></div>
+          <canvas id="wheelCanvas" width="190" height="190" class="rounded-full shadow-2xl"></canvas>
+        </div>
+
+        <button onclick="spinWheel()" class="w-full mt-3 py-2 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition active:scale-95">
+          <i class="fa-solid fa-dice mr-1"></i> SPIN THE WHEEL NOW
+        </button>
+        <p id="spinRewardResult" class="text-xs text-emerald-400 mt-2 font-bold min-h-[1.25rem]"></p>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Interactive Workspace Tabs (8 cols) -->
+    <div class="lg:col-span-8 space-y-4">
+
+      <!-- Desktop Tabs Header -->
+      <div class="hidden md:flex border-b border-slate-800 bg-slate-900/60 rounded-t-2xl px-3 pt-2 gap-2 text-xs font-medium">
+        <button onclick="switchTab('notes')" id="tabBtnNotes" class="px-4 py-2.5 border-b-2 border-indigo-500 text-indigo-400 font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-book-open"></i> Zero-Assumption Notes
+        </button>
+        <button onclick="switchTab('pretest')" id="tabBtnPretest" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-list-check"></i> Diagnostic Pre-Test
+        </button>
+        <button onclick="switchTab('ide')" id="tabBtnIde" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-code"></i> Cloud IDE (Zero-Install)
+        </button>
+        <button onclick="switchTab('assessment')" id="tabBtnAssessment" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-stopwatch"></i> 100 Qs Mock (60 Min)
+        </button>
+        <button onclick="switchTab('credentials')" id="tabBtnCredentials" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-medal"></i> Badges & Certs
+        </button>
+      </div>
+
+      <!-- TAB 1: ZERO-ASSUMPTION NOTES -->
+      <div id="tabContentNotes" class="bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <span class="text-xs text-indigo-400 font-mono" id="currentSessionLabel">SESSION 1 • 6 HOURS</span>
+            <h2 class="text-base md:text-lg font-extrabold text-white" id="currentSessionTitle">Loading Module...</h2>
+          </div>
+          <span class="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/30">
+            Zero Assumptions Mode
+          </span>
+        </div>
+
+        <div id="notesBody" class="space-y-4">
+          <!-- Dynamic Content Injected via notes-data.js -->
+        </div>
+      </div>
+
+      <!-- TAB 2: DIAGNOSTIC PRE-TEST -->
+      <div id="tabContentPretest" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-4">
+        <div class="border-b border-slate-800 pb-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-sky-400"></i> Daily Diagnostic Pre-Assessment
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Quick 5-minute readiness check before exploring today's lessons. Zero pressure!</p>
+        </div>
+
+        <div id="preTestQuestionsContainer" class="space-y-4"></div>
+
+        <div class="pt-2">
+          <button onclick="gradePreAssessment()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition">
+            Submit Pre-Assessment
+          </button>
+        </div>
+
+        <div id="preTestResultBox" class="hidden mt-3"></div>
+      </div>
+
+      <!-- TAB 3: IN-BROWSER CLOUD IDE & SANDBOX -->
+      <div id="tabContentIde" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-terminal text-emerald-400"></i> Zero-Install Cloud Sandbox:
+            </span>
+            <select id="ideLanguageSelector" class="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1 focus:outline-none">
+              <option value="c">C Language (GCC/Wasm Compiler)</option>
+              <option value="sql">RDBMS & SQL (SQLite In-Memory)</option>
+              <option value="web">Web Sandbox (HTML + CSS + JS)</option>
+              <option value="word">MS-Word Document Processor</option>
+              <option value="excel">MS-Excel Computation Engine</option>
+            </select>
+          </div>
+          <button onclick="runIdeCode()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
+            <i class="fa-solid fa-play text-[10px]"></i> Run / Compile Code
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <span class="text-[11px] text-slate-400 font-mono">Source Code Editor</span>
+            <textarea id="codeEditorInput" class="w-full h-80 bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-emerald-400 focus:outline-none focus:border-indigo-500" spellcheck="false"></textarea>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[11px] text-slate-400 font-mono">Live Execution / Sandbox View</span>
+            <div id="codeTerminalOutput" class="w-full h-80 bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-slate-200 overflow-y-auto whitespace-pre-wrap">Click 'Run / Compile Code' to execute directly in browser...</div>
+            <iframe id="webPreviewFrame" class="hidden w-full h-80 bg-white rounded-xl border border-slate-800"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: 100-QUESTION 60-MIN TIMED MOCK ASSESSMENT -->
+      <div id="tabContentAssessment" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-4">
+        
+        <!-- Exam Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-stopwatch text-rose-400"></i> Daily Final Mock Assessment (100 Questions)
+            </h3>
+            <p class="text-xs text-slate-400">Strict 60-Minute Timer • Passing Score: 60% • Verified against Google ID</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 uppercase font-mono">Time Left</span>
+            <div id="examTimerDisplay" class="text-xl font-mono font-black text-rose-400">60:00</div>
+          </div>
+        </div>
+
+        <!-- Exam Lobby State -->
+        <div id="examLobby" class="text-center py-10 space-y-4">
+          <div class="w-16 h-16 mx-auto rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <h4 class="text-base font-extrabold text-white">Daily Comprehensive Examination</h4>
+          <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+            100 questions covering today's curriculum. Time limit: exactly 60 minutes. Passing unlocks today's downloadable Badge (PNG & PDF) and next day's access!
+          </p>
+          <button onclick="startTimedMockExam()" class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-sky-500 hover:from-indigo-500 hover:to-sky-400 text-white font-extrabold text-xs rounded-xl shadow-lg transition">
+            <i class="fa-solid fa-play mr-1.5"></i> START 60-MINUTE EXAM (100 QUESTIONS)
+          </button>
+        </div>
+
+        <!-- Active Question Layout -->
+        <div id="examActiveContainer" class="hidden space-y-4">
+          
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center space-x-2">
+              <span id="examCurrentQNumber" class="font-bold text-white">Question 1 of 100</span>
+              <span id="examTopicBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-indigo-300 border border-slate-700"></span>
+            </div>
+            <!-- Lifeline button -->
+            <button onclick="use5050Lifeline()" class="px-2.5 py-1 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg font-bold text-[11px] flex items-center gap-1">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Use 50/50 Lifeline
+            </button>
+          </div>
+
+          <!-- Question Card -->
+          <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+            <p id="examQuestionText" class="text-sm font-semibold text-white leading-relaxed"></p>
+            <div id="examOptionsContainer" class="space-y-2"></div>
+          </div>
+
+          <!-- Controls -->
+          <div class="flex items-center justify-between pt-1">
+            <button onclick="prevExamQuestion()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg">
+              <i class="fa-solid fa-arrow-left mr-1"></i> Prev
+            </button>
+            <button id="markReviewBtn" onclick="toggleMarkForReview()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg">
+              <i class="fa-solid fa-flag mr-1"></i> Review
+            </button>
+            <button onclick="nextExamQuestion()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg">
+              Next <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+            <button onclick="submitExam()" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg shadow">
+              Submit Exam
+            </button>
+          </div>
+
+          <!-- 100 Questions Palette Grid -->
+          <div class="border-t border-slate-800 pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] text-slate-400 font-bold uppercase">Question Palette (100 Questions)</span>
+              <div class="flex items-center space-x-2 text-[10px]">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-600 inline-block"></span> Answered</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-600 inline-block"></span> Review</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-slate-800 inline-block"></span> Unanswered</span>
+              </div>
+            </div>
+            <div id="examPaletteGrid" class="flex flex-wrap gap-1 max-h-36 overflow-y-auto p-1 bg-slate-950 rounded-xl border border-slate-800"></div>
+          </div>
+
+        </div>
+
+        <!-- Exam Result Card -->
+        <div id="examResultCard" class="hidden text-center py-8 space-y-4 bg-slate-950 border border-slate-800 rounded-2xl p-6">
+          <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <h4 id="resultStatusHeading" class="text-xl font-black text-white">CONGRATULATIONS!</h4>
+          <div id="resultFinalScoreText" class="text-2xl font-mono font-black text-emerald-400">-- / 100</div>
+          <p id="resultStatusDesc" class="text-xs text-slate-300 max-w-md mx-auto"></p>
+          <div class="pt-2 flex items-center justify-center gap-3">
+            <button onclick="switchTab('credentials')" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition">
+              <i class="fa-solid fa-medal mr-1.5"></i> VIEW & DOWNLOAD BADGES (PNG & PDF)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 5: BADGES & CERTIFICATES -->
+      <div id="tabContentCredentials" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-6">
+        <div>
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-medal text-amber-400"></i> Downloadable Badges & Credentials
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Verified against your Google Account ID. Available in High-Res PNG and Print-Ready Vector PDF format.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Day 1 Badge Card -->
+          <div class="bg-slate-950 border border-indigo-900/40 rounded-xl p-4 text-center space-y-3 shadow">
+            <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-indigo-700 to-sky-400 flex items-center justify-center text-2xl text-white shadow-lg shadow-indigo-500/20">
+              <i class="fa-solid fa-terminal"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white">Day 1 Badge</h4>
+              <p class="text-[11px] text-indigo-300">IT Foundation & C Pioneer</p>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+              <button onclick="downloadBadge('png', 1)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] rounded-lg border border-slate-700 font-semibold">PNG</button>
+              <button onclick="downloadBadge('pdf', 1)" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] rounded-lg font-bold">PDF</button>
+            </div>
+          </div>
+
+          <!-- Day 2 Badge Card -->
+          <div class="bg-slate-950 border border-emerald-900/40 rounded-xl p-4 text-center space-y-3 shadow">
+            <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-emerald-700 to-teal-400 flex items-center justify-center text-2xl text-white shadow-lg shadow-emerald-500/20">
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white">Day 2 Badge</h4>
+              <p class="text-[11px] text-emerald-300">Logic & RDBMS Architect</p>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+              <button onclick="downloadBadge('png', 2)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] rounded-lg border border-slate-700 font-semibold">PNG</button>
+              <button onclick="downloadBadge('pdf', 2)" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] rounded-lg font-bold">PDF</button>
+            </div>
+          </div>
+
+          <!-- Day 3 Badge Card -->
+          <div class="bg-slate-950 border border-amber-900/40 rounded-xl p-4 text-center space-y-3 shadow">
+            <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-amber-600 to-rose-400 flex items-center justify-center text-2xl text-white shadow-lg shadow-amber-500/20">
+              <i class="fa-brands fa-html5"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white">Day 3 Badge</h4>
+              <p class="text-[11px] text-amber-300">Modern Web Graduate</p>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+              <button onclick="downloadBadge('png', 3)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white text-[10px] rounded-lg border border-slate-700 font-semibold">PNG</button>
+              <button onclick="downloadBadge('pdf', 3)" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white text-[10px] rounded-lg font-bold">PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grand Completion Certificate Card -->
+        <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-2xl p-6 text-center space-y-3">
+          <span class="text-[10px] uppercase font-mono tracking-widest text-amber-400">Final Milestone Credential</span>
+          <h3 class="text-base font-extrabold text-white">Official Certificate of Excellence — Powered By Kapil</h3>
+          <p class="text-xs text-slate-300 max-w-lg mx-auto leading-relaxed">
+            Issued to learners completing the entire 15-Hour Digital Empowerment curriculum and passing all daily 100-question final assessments.
+          </p>
+          <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <button onclick="downloadCertificate('png')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl border border-slate-700 flex items-center gap-2">
+              <i class="fa-solid fa-image"></i> Download Certificate (PNG)
+            </button>
+            <button onclick="downloadCertificate('pdf')" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2">
+              <i class="fa-solid fa-file-pdf"></i> Download Official Certificate (PDF)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-900/60 px-4 py-4 text-center text-xs text-slate-400">
+    <p>Digital Empowerment Bootcamp • Powered By Kapil • Zero Assumptions • From Zero to Infinity</p>
+  </footer>
+
+  <!-- Hidden Canvas for Vector Graphics & PDF Rendering -->
+  <canvas id="credentialExportCanvas" class="hidden"></canvas>
+
+  <!-- Firebase SDKs (Compat for zero-bundler fast client execution) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <script src="./js/firebase-init.js"></script>
+
+  <!-- Application Logic Scripts -->
+  <script src="./js/questions-data.js"></script>
+  <script src="./js/notes-data.js"></script>
+  <script src="./js/ide-engine.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
