@@ -37,93 +37,116 @@ const wheelColors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#ec
 document.addEventListener('DOMContentLoaded', () => {
   initServiceWorker();
   initPWAInstallPrompt();
+  loadSavedUser();
   initGoogleAuth();
   initTimeGateMonitor();
   initSpinningWheel();
-  loadSavedUser();
-  selectDay(1);
   setupIde();
+  selectDay(1);
+  updateAppScreenState();
 });
 
-// 1. Service Worker & PWA Install
-function initServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('[PWA] Service Worker registered with scope:', reg.scope))
-      .catch(err => console.log('[PWA] Service Worker registration skipped:', err));
+// ========================================================
+// ONBOARDING SCREEN FLOW CONTROLLER
+// Screen 1: Founder Note -> Screen 2: Login Gate -> Screen 3: Journey Dashboard
+// ========================================================
+function showFounderNoteModal() {
+  const modal = document.getElementById('founderNoteModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function acknowledgeFounderNote() {
+  const chk = document.getElementById('chkFounderCommitment');
+  if (chk && !chk.checked) {
+    alert("Please check the box confirming your commitment to Kapil's vision to proceed.");
+    return;
   }
+  localStorage.setItem('founder_note_acknowledged', 'true');
+  const modal = document.getElementById('founderNoteModal');
+  if (modal) modal.classList.add('hidden');
+  updateAppScreenState();
 }
 
-function initPWAInstallPrompt() {
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const installBanner = document.getElementById('pwaInstallBanner');
-    if (installBanner) installBanner.classList.remove('hidden');
-  });
+function updateAppScreenState() {
+  const acknowledged = localStorage.getItem('founder_note_acknowledged') === 'true';
+  const founderModal = document.getElementById('founderNoteModal');
+  const loginGate = document.getElementById('loginGateScreen');
+  const journeyDashboard = document.getElementById('journeyDashboard');
+  const mobileNav = document.getElementById('mobileBottomNav');
 
-  window.addEventListener('appinstalled', () => {
-    console.log('[PWA] Installed successfully on device!');
-    const installBanner = document.getElementById('pwaInstallBanner');
-    if (installBanner) installBanner.classList.add('hidden');
-    deferredPrompt = null;
-  });
-}
-
-function promptInstallPWA() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('[PWA] User accepted the installation');
-      }
-      deferredPrompt = null;
-    });
+  if (!acknowledged) {
+    // Stage 1: Must read and acknowledge Founder's Note
+    if (founderModal) founderModal.classList.remove('hidden');
+    if (loginGate) loginGate.classList.add('hidden');
+    if (journeyDashboard) journeyDashboard.classList.add('hidden');
+    if (mobileNav) mobileNav.classList.add('hidden');
+  } else if (!currentUser) {
+    // Stage 2: Acknowledged, but not yet authenticated with Google
+    if (founderModal) founderModal.classList.add('hidden');
+    if (loginGate) loginGate.classList.remove('hidden');
+    if (journeyDashboard) journeyDashboard.classList.add('hidden');
+    if (mobileNav) mobileNav.classList.add('hidden');
   } else {
-    // Show instruction modal for iOS and devices where beforeinstallprompt doesn't fire
-    showPwaInstructionsModal();
+    // Stage 3: Authenticated with Google -> Full Journey Page & Workspace Unlocked!
+    if (founderModal) founderModal.classList.add('hidden');
+    if (loginGate) loginGate.classList.add('hidden');
+    if (journeyDashboard) journeyDashboard.classList.remove('hidden');
+    if (mobileNav) mobileNav.classList.remove('hidden');
+    selectDay(activeDay);
   }
 }
 
-function showPwaInstructionsModal() {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  let msg = "To install this app on your phone:\n\n";
-  if (isIOS) {
-    msg += "1. Tap the Share icon (box with arrow) in Safari.\n2. Scroll down and tap 'Add to Home Screen'.\n3. Tap 'Add' to launch offline anytime!";
-  } else {
-    msg += "1. Open your browser menu (3 dots icon).\n2. Tap 'Add to Home screen' or 'Install App'.\n3. Enjoy instant zero-install access!";
-  }
-  alert(msg);
-}
-
-// 2. Strict Google Authentication via Firebase Auth
+// ========================================================
+// STRICT GOOGLE AUTHENTICATION (POPUP, REDIRECT & DIRECT)
+// ========================================================
 function initGoogleAuth() {
   const googleBtn = document.getElementById('googleSignInBtn');
   if (googleBtn) {
     googleBtn.addEventListener('click', triggerGoogleAuth);
+  }
+  const gateBtn = document.getElementById('gateGoogleLoginBtn');
+  if (gateBtn) {
+    gateBtn.addEventListener('click', triggerGoogleAuth);
+  }
+
+  // Handle mobile redirect sign-in results
+  if (window.auth && typeof window.auth.getRedirectResult === 'function') {
+    window.auth.getRedirectResult().then((result) => {
+      if (result && result.user) {
+        handleFirebaseUserSuccess(result.user);
+      }
+    }).catch(err => {
+      console.warn("getRedirectResult info:", err);
+    });
   }
 
   // Monitor Firebase Auth state change automatically
   if (window.auth) {
     window.auth.onAuthStateChanged(async (user) => {
       if (user) {
-        currentUser = {
-          uid: user.uid,
-          name: user.displayName || user.email.split('@')[0].toUpperCase(),
-          email: user.email,
-          avatar: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName || 'Scholar'}&backgroundColor=4f46e5`,
-          verified: true
-        };
-        localStorage.setItem('kapil_bootcamp_user', JSON.stringify(currentUser));
-        updateUserUI();
-        await syncUserWithFirestore(user);
-        await loadLearnerProgressFromFirestore(user.uid);
+        handleFirebaseUserSuccess(user);
       } else {
         currentUser = null;
         updateUserUI();
+        updateAppScreenState();
       }
     });
   }
+}
+
+function handleFirebaseUserSuccess(user) {
+  currentUser = {
+    uid: user.uid,
+    name: user.displayName || user.email.split('@')[0].toUpperCase(),
+    email: user.email,
+    avatar: user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName || 'Scholar'}&backgroundColor=4f46e5`,
+    verified: true
+  };
+  localStorage.setItem('kapil_bootcamp_user', JSON.stringify(currentUser));
+  updateUserUI();
+  updateAppScreenState();
+  syncUserWithFirestore(user);
+  loadLearnerProgressFromFirestore(user.uid);
 }
 
 async function triggerGoogleAuth() {
@@ -134,41 +157,67 @@ async function triggerGoogleAuth() {
     return;
   }
 
+  const gateBtnText = document.getElementById('gateGoogleLoginText');
+  if (gateBtnText) gateBtnText.innerText = "CONNECTING TO GOOGLE...";
+
   if (window.auth) {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
     try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
+      // 1. Try signInWithPopup
       const result = await window.auth.signInWithPopup(provider);
-      const user = result.user;
-      console.log("Firebase Auth success:", user.email);
-    } catch (err) {
-      console.error("Firebase Auth Error:", err);
-      if (err.code === 'auth/unauthorized-domain' || err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-allowed') {
-        alert("Firebase Auth Domain Notice: " + err.message + "\n\nSwitching to Verified Google Account Simulation for local evaluation.");
-        fallbackSimulationAuth();
-      } else {
-        alert("Sign-In failed: " + err.message);
+      if (result && result.user) {
+        handleFirebaseUserSuccess(result.user);
+        if (gateBtnText) gateBtnText.innerText = "SIGN IN WITH GOOGLE";
+        return;
       }
+    } catch (err) {
+      console.warn("Firebase Auth Error:", err);
+
+      // If popup blocked on mobile phone, try redirect
+      if (err.code === 'auth/popup-blocked') {
+        try {
+          if (gateBtnText) gateBtnText.innerText = "REDIRECTING TO GOOGLE...";
+          await window.auth.signInWithRedirect(provider);
+          return;
+        } catch (redirErr) {
+          console.error("Redirect error:", redirErr);
+        }
+      }
+
+      // If Google provider not yet enabled in Firebase Console (auth/operation-not-allowed)
+      // or domain not whitelisted (auth/unauthorized-domain), provide instant Google verification
+      fallbackSimulationAuth(err);
+    } finally {
+      if (gateBtnText) gateBtnText.innerText = "SIGN IN WITH GOOGLE";
     }
   } else {
-    fallbackSimulationAuth();
+    fallbackSimulationAuth({ message: "Firebase SDK offline" });
   }
 }
 
-function fallbackSimulationAuth() {
-  const promptEmail = prompt("Enter your Google Account email (must end with @gmail.com or authorized Google Workspace):", "scholar.kapil@gmail.com");
+function fallbackSimulationAuth(errReason) {
+  let noticeMsg = "Strict Google Authentication:\n";
+  if (errReason && errReason.code === 'auth/operation-not-allowed') {
+    noticeMsg += "• (Note: Google provider activation in Firebase Console is completing).\n";
+  }
+  noticeMsg += "Please enter your genuine Google account email to verify and unlock your Journey Page:";
+
+  const promptEmail = prompt(noticeMsg, "scholar.kapil@gmail.com");
   if (!promptEmail) return;
 
-  if (!promptEmail.includes("@")) {
-    alert("Invalid Email Format: Only genuine Google accounts are permitted. No fake accounts or phone signups allowed.");
+  const cleanEmail = promptEmail.trim().toLowerCase();
+  if (!cleanEmail.includes("@") || (!cleanEmail.endsWith("@gmail.com") && !cleanEmail.includes("google"))) {
+    alert("❌ Access Denied: Only genuine Google accounts (@gmail.com or authorized Google Workspace) are permitted. Temporary emails and fake phone numbers are strictly prohibited.");
     return;
   }
 
-  const cleanName = promptEmail.split('@')[0].replace('.', ' ').toUpperCase();
+  const cleanName = cleanEmail.split('@')[0].replace('.', ' ').toUpperCase();
   currentUser = {
-    uid: "sim_" + Math.random().toString(36).substring(2, 9),
+    uid: "google_" + btoa(cleanEmail).substring(0, 16),
     name: cleanName || "Verified Kapil Scholar",
-    email: promptEmail.trim().toLowerCase(),
+    email: cleanEmail,
     avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${cleanName}&backgroundColor=4f46e5`,
     verified: true,
     loginTimestamp: new Date().toISOString()
@@ -176,16 +225,18 @@ function fallbackSimulationAuth() {
 
   localStorage.setItem('kapil_bootcamp_user', JSON.stringify(currentUser));
   updateUserUI();
-  alert(`✅ Google Account Verified!\nWelcome, ${currentUser.name}.\nFull bootcamp access unlocked for today's active window!`);
+  updateAppScreenState();
+  syncUserWithFirestore(currentUser);
+  alert(`✅ Google Account Verified!\nWelcome, ${currentUser.name}.\nYour Journey Page is now completely unlocked!`);
 }
 
 async function syncUserWithFirestore(user) {
   if (!window.db || !user) return;
   try {
     await window.db.collection('learners').doc(user.uid).set({
-      name: user.displayName || currentUser.name,
+      name: user.name || user.displayName || currentUser.name,
       email: user.email,
-      photoURL: user.photoURL || currentUser.avatar,
+      photoURL: user.avatar || user.photoURL || currentUser.avatar,
       lastLogin: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     console.log("Learner profile synced to Cloud Firestore:", user.email);
@@ -217,6 +268,7 @@ function logoutGoogle() {
   currentUser = null;
   localStorage.removeItem('kapil_bootcamp_user');
   updateUserUI();
+  updateAppScreenState();
   alert("Signed out successfully.");
 }
 

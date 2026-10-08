@@ -6,6 +6,7 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './icons/icon-192.svg',
   './icons/icon-512.svg',
+  './images/kapil_founder.jpg',
   './js/questions-data.js',
   './js/notes-data.js',
   './js/ide-engine.js',
