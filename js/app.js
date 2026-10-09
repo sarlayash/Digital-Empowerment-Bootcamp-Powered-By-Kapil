@@ -252,9 +252,13 @@ async function loadLearnerProgressFromFirestore(uid) {
     const doc = await window.db.collection('learners').doc(uid).get();
     if (doc.exists) {
       const data = doc.data();
-      if (data.day_1_passed) localStorage.setItem('day_1_passed', 'true');
-      if (data.day_2_passed) localStorage.setItem('day_2_passed', 'true');
-      if (data.day_3_passed) localStorage.setItem('day_3_passed', 'true');
+      [1, 2, 3].forEach(d => {
+        if (data[`day_${d}_passed`]) localStorage.setItem(`day_${d}_passed`, 'true');
+        if (data[`day_${d}_score`] !== undefined) localStorage.setItem(`day_${d}_score`, String(data[`day_${d}_score`]));
+        if (data[`day_${d}_attempts`] !== undefined) localStorage.setItem(`day_${d}_attempts`, String(data[`day_${d}_attempts`]));
+        if (data[`day_${d}_lockout_until`] !== undefined) localStorage.setItem(`day_${d}_lockout_until`, String(data[`day_${d}_lockout_until`]));
+      });
+
       if (data.level0_completed && Array.isArray(data.level0_completed)) {
         completedLevel0Ids = new Set(data.level0_completed);
         localStorage.setItem('level0_completed_exercises', JSON.stringify(data.level0_completed));
@@ -262,6 +266,8 @@ async function loadLearnerProgressFromFirestore(uid) {
         renderLevel0ExerciseList();
       }
       updateTimeGateStatus();
+      updateExamLobbyState();
+      updateCredentialsUI();
     }
   } catch (e) {
     console.warn("Firestore progress load note:", e);
@@ -351,6 +357,7 @@ function updateTimeGateStatus() {
 
   // Check locking of Day 2 and Day 3
   updateDayLockStates(isWindowActive);
+  updateExamCooldownTicker();
 }
 
 function toggleTestMode() {
@@ -359,30 +366,51 @@ function toggleTestMode() {
     ? "🔓 Mentor/Test Mode ENABLED: All 3 Days and Exams are unlocked for evaluation!" 
     : "🔒 Standard Drip-Lock Restored (8:00 AM - 8:00 PM Window Enforced).");
   updateTimeGateStatus();
+  updateCredentialsUI();
+  updateExamLobbyState();
   selectDay(activeDay);
 }
 
 function updateDayLockStates(isWindowActive) {
   const day2Badge = document.getElementById('day2LockBadge');
   const day3Badge = document.getElementById('day3LockBadge');
+  const day1Passed = localStorage.getItem('day_1_passed') === 'true';
+  const day2Passed = localStorage.getItem('day_2_passed') === 'true';
 
   if (testModeOverride) {
-    if (day2Badge) day2Badge.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-unlock"></i> Unlocked</span>`;
-    if (day3Badge) day3Badge.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-unlock"></i> Unlocked</span>`;
+    if (day2Badge) day2Badge.innerHTML = `<span class="text-emerald-400 font-mono"><i class="fa-solid fa-unlock"></i> Unlocked</span>`;
+    if (day3Badge) day3Badge.innerHTML = `<span class="text-emerald-400 font-mono"><i class="fa-solid fa-unlock"></i> Unlocked</span>`;
     return;
   }
 
-  if (day2Badge) day2Badge.innerHTML = `<i class="fa-solid fa-lock text-[9px]"></i> Unlocks Day 2 08:00 AM`;
-  if (day3Badge) day3Badge.innerHTML = `<i class="fa-solid fa-lock text-[9px]"></i> Unlocks Day 3 08:00 AM`;
+  if (day2Badge) {
+    if (day1Passed) {
+      day2Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold flex items-center gap-1";
+      day2Badge.innerHTML = `<i class="fa-solid fa-unlock text-[9px]"></i> Day 1 Passed (≥90%)`;
+    } else {
+      day2Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold flex items-center gap-1";
+      day2Badge.innerHTML = `<i class="fa-solid fa-lock text-[9px]"></i> Need Day 1 (≥90%)`;
+    }
+  }
+
+  if (day3Badge) {
+    if (day2Passed) {
+      day3Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold flex items-center gap-1";
+      day3Badge.innerHTML = `<i class="fa-solid fa-unlock text-[9px]"></i> Day 2 Passed (≥90%)`;
+    } else {
+      day3Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-semibold flex items-center gap-1";
+      day3Badge.innerHTML = `<i class="fa-solid fa-lock text-[9px]"></i> Need Day 2 (≥90%)`;
+    }
+  }
 }
 
 // 4. Day & Tab Navigation
 function selectDay(dayNum) {
   if (dayNum > 1 && !testModeOverride) {
-    // Check if user completed previous day
-    const prevCompleted = localStorage.getItem(`day_${dayNum - 1}_passed`);
-    if (!prevCompleted) {
-      alert(`⚠️ Day ${dayNum} is locked!\nYou must complete Day ${dayNum - 1}'s 100-Question Final Assessment first, or toggle 'Mentor Test Mode' in the top bar to preview.`);
+    const prevPassed = localStorage.getItem(`day_${dayNum - 1}_passed`) === 'true';
+    if (!prevPassed) {
+      const prevScore = localStorage.getItem(`day_${dayNum - 1}_score`) || '0';
+      alert(`⚠️ Day ${dayNum} is locked!\n\nYou must pass Day ${dayNum - 1}'s 100-Question Final Assessment with a score of 90% or above first.\nYour highest score on Day ${dayNum - 1}: ${prevScore}/100.`);
       return;
     }
   }
@@ -405,6 +433,9 @@ function selectDay(dayNum) {
   renderNotesForDay(dayNum);
   // Reset Pre-Assessment UI for the Day
   renderPreAssessmentForDay(dayNum);
+  // Update Exam Lobby & Credentials UI
+  updateExamLobbyState();
+  updateCredentialsUI();
 }
 
 function switchTab(tabId) {
@@ -432,6 +463,10 @@ function switchTab(tabId) {
     loadIdeLanguageTemplate();
   } else if (tabId === 'level0') {
     renderCurrentLevel0Exercise();
+  } else if (tabId === 'assessment') {
+    updateExamLobbyState();
+  } else if (tabId === 'credentials') {
+    updateCredentialsUI();
   }
 }
 
@@ -941,10 +976,216 @@ function playWheelSound() {
   }
 }
 
-// 8. 100-Question 60-Minute Timed Final Mock Assessment
+// ========================================================
+// 8. 100-QUESTION 60-MINUTE TIMED FINAL MOCK ASSESSMENT
+// Passing Score: ≥90% • 1 Retry Allowed • 24-Hour Lockout
+// ========================================================
+
+function getExamStateForDay(dayNum) {
+  const isPassed = localStorage.getItem(`day_${dayNum}_passed`) === 'true';
+  const score = parseInt(localStorage.getItem(`day_${dayNum}_score`) || '0', 10);
+  let attempts = parseInt(localStorage.getItem(`day_${dayNum}_attempts`) || '0', 10);
+  let lockoutUntil = parseInt(localStorage.getItem(`day_${dayNum}_lockout_until`) || '0', 10);
+
+  // Check if 24-hr lockout has expired
+  const now = Date.now();
+  if (lockoutUntil > 0 && now >= lockoutUntil) {
+    lockoutUntil = 0;
+    attempts = 0;
+    localStorage.setItem(`day_${dayNum}_lockout_until`, '0');
+    localStorage.setItem(`day_${dayNum}_attempts`, '0');
+    // Sync expiration clear to Firestore if logged in
+    if (currentUser && currentUser.uid && window.db) {
+      try {
+        window.db.collection('learners').doc(currentUser.uid).set({
+          [`day_${dayNum}_attempts`]: 0,
+          [`day_${dayNum}_lockout_until`]: 0
+        }, { merge: true });
+      } catch (e) {
+        console.warn("Firestore lockout clear note:", e);
+      }
+    }
+  }
+
+  const isLockedOut = (lockoutUntil > 0 && now < lockoutUntil);
+  const remainingLockMs = isLockedOut ? (lockoutUntil - now) : 0;
+
+  return {
+    dayNum,
+    isPassed,
+    score,
+    attempts,
+    isLockedOut,
+    lockoutUntil,
+    remainingLockMs
+  };
+}
+
+function updateExamCooldownTicker() {
+  const state = getExamStateForDay(activeDay);
+  const countdownEl = document.getElementById('examLockoutTimerCountdown');
+  const lockoutAlert = document.getElementById('examLockoutAlert');
+
+  if (state.isLockedOut && !testModeOverride) {
+    if (lockoutAlert) lockoutAlert.classList.remove('hidden');
+    if (countdownEl) {
+      const hours = Math.floor(state.remainingLockMs / (1000 * 60 * 60));
+      const mins = Math.floor((state.remainingLockMs % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((state.remainingLockMs % (1000 * 60)) / 1000);
+      countdownEl.innerText = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+  } else if (!state.isLockedOut && lockoutAlert && !lockoutAlert.classList.contains('hidden')) {
+    updateExamLobbyState();
+  }
+}
+
+function updateExamLobbyState() {
+  const dayLabel = document.getElementById('examLobbyDayLabel');
+  const attemptsBadge = document.getElementById('examLobbyAttemptsBadge');
+  const lockoutAlert = document.getElementById('examLockoutAlert');
+  const countdownEl = document.getElementById('examLockoutTimerCountdown');
+  const unlockTimeEl = document.getElementById('examLockoutUnlockTime');
+  const statusCard = document.getElementById('examLobbyStatusCard');
+  const startBtn = document.getElementById('btnStartExam');
+  const resetBtn = document.getElementById('btnResetLockoutMentor');
+
+  if (dayLabel) {
+    dayLabel.innerText = `DAY ${activeDay} ASSESSMENT (100 QUESTIONS)`;
+  }
+
+  if (resetBtn) {
+    if (testModeOverride) {
+      resetBtn.classList.remove('hidden');
+    } else {
+      resetBtn.classList.add('hidden');
+    }
+  }
+
+  const state = getExamStateForDay(activeDay);
+
+  if (state.isLockedOut && !testModeOverride) {
+    // 24-Hour Cooldown Active
+    if (lockoutAlert) lockoutAlert.classList.remove('hidden');
+    if (attemptsBadge) {
+      attemptsBadge.className = "text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold";
+      attemptsBadge.innerText = "LOCKED (2 ATTEMPTS USED)";
+    }
+    if (unlockTimeEl) {
+      unlockTimeEl.innerText = `Unlocks on: ${new Date(state.lockoutUntil).toLocaleString()}`;
+    }
+    if (countdownEl) {
+      const hours = Math.floor(state.remainingLockMs / (1000 * 60 * 60));
+      const mins = Math.floor((state.remainingLockMs % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((state.remainingLockMs % (1000 * 60)) / 1000);
+      countdownEl.innerText = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    if (statusCard) {
+      statusCard.innerHTML = `
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-400">
+          Last Attempt Score: <strong class="text-rose-400 font-mono">${state.score}/100</strong> (Passing requires ≥90%).<br>
+          Cooldown protects testing integrity. Revise Day ${activeDay} notes and practice in the Level 0 Lab!
+        </div>
+      `;
+    }
+    if (startBtn) {
+      startBtn.disabled = true;
+      startBtn.className = "px-6 py-2.5 bg-slate-800 text-slate-500 font-extrabold text-xs rounded-xl border border-slate-700 cursor-not-allowed";
+      startBtn.innerHTML = '<i class="fa-solid fa-lock mr-1.5"></i> ASSESSMENT LOCKED (24-HR COOLDOWN)';
+    }
+  } else {
+    // Not in lockout
+    if (lockoutAlert) lockoutAlert.classList.add('hidden');
+
+    if (state.isPassed) {
+      if (attemptsBadge) {
+        attemptsBadge.className = "text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold";
+        attemptsBadge.innerText = `PASSED (SCORE: ${state.score}/100)`;
+      }
+      if (statusCard) {
+        statusCard.innerHTML = `
+          <div class="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-center space-y-1">
+            <span class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-circle-check"></i> Benchmark Passed (≥90%)</span>
+            <p class="text-xs text-white font-mono">Your Highest Score: <strong>${state.score} / 100 (${state.score}%)</strong></p>
+            <p class="text-[11px] text-slate-300">Day ${activeDay} Badge is permanently unlocked! Download it in the Badges & Certs tab.</p>
+          </div>
+        `;
+      }
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.className = "px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 shadow transition";
+        startBtn.innerHTML = '<i class="fa-solid fa-rotate mr-1.5"></i> RE-TAKE EXAM FOR PRACTICE (100 Qs)';
+      }
+    } else if (state.attempts === 1) {
+      if (attemptsBadge) {
+        attemptsBadge.className = "text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold";
+        attemptsBadge.innerText = "1 RETRY REMAINING";
+      }
+      if (statusCard) {
+        statusCard.innerHTML = `
+          <div class="p-3.5 bg-amber-950/40 border border-amber-500/40 rounded-xl text-center space-y-1">
+            <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-triangle-exclamation"></i> Attempt 1 Score: ${state.score}/100</span>
+            <p class="text-xs text-slate-300">Passing Benchmark: <strong>≥90% (90/100)</strong>.</p>
+            <p class="text-[11px] text-rose-300 font-semibold">⚠️ Caution: Scoring below 90% on this retry will lock this assessment for 24 hours.</p>
+          </div>
+        `;
+      }
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.className = "px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg transition";
+        startBtn.innerHTML = '<i class="fa-solid fa-play mr-1.5"></i> START FINAL RETRY (100 QUESTIONS)';
+      }
+    } else {
+      // 0 attempts
+      if (attemptsBadge) {
+        attemptsBadge.className = "text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700";
+        attemptsBadge.innerText = "Attempt 1 of 2 (1 Retry Allowed)";
+      }
+      if (statusCard) {
+        statusCard.innerHTML = `
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300">
+            <strong>Passing Benchmark:</strong> 90% (90/100 correct).<br>
+            <span class="text-slate-400 text-[11px]">1 initial attempt and 1 retry allowed. If both attempts score &lt;90%, assessment locks for 24 hours.</span>
+          </div>
+        `;
+      }
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.className = "px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-sky-500 hover:from-indigo-500 hover:to-sky-400 text-white font-extrabold text-xs rounded-xl shadow-lg transition";
+        startBtn.innerHTML = '<i class="fa-solid fa-play mr-1.5"></i> START 60-MINUTE EXAM (100 QUESTIONS)';
+      }
+    }
+  }
+}
+
+function resetLockoutForTesting() {
+  localStorage.setItem(`day_${activeDay}_attempts`, '0');
+  localStorage.setItem(`day_${activeDay}_lockout_until`, '0');
+  alert(`🔓 Test Mode: Attempts and 24-Hour Cooldown for Day ${activeDay} reset to 0!`);
+  updateExamLobbyState();
+}
+
 function startTimedMockExam() {
   if (!currentUser && !testModeOverride) {
     alert("⚠️ Security Protocol: Please sign in with Google to record and verify your exam score.");
+    return;
+  }
+
+  // Check 24-Hour Lockout
+  const examState = getExamStateForDay(activeDay);
+  if (examState.isLockedOut && !testModeOverride) {
+    const hours = Math.floor(examState.remainingLockMs / (1000 * 60 * 60));
+    const mins = Math.floor((examState.remainingLockMs % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((examState.remainingLockMs % (1000 * 60)) / 1000);
+    alert(`🔒 Assessment Locked for 24 Hours!\n\nBoth initial attempt and retry scored below 90%.\nCooldown remaining: ${hours}h ${mins}m ${secs}s.\n\nPlease review Day ${activeDay} notes and practice Level 0 lab exercises.`);
+    return;
+  }
+
+  // Check 8:00 AM - 8:00 PM Time Gate Window
+  const now = new Date();
+  const currentHour = now.getHours();
+  const isWindowActive = testModeOverride || (currentHour >= 8 && currentHour < 20);
+  if (!isWindowActive) {
+    alert("🔒 Time Window Locked!\n\nBootcamp assessments are active daily from 08:00 AM to 08:00 PM.\nThe window will open again tomorrow at 08:00 AM.");
     return;
   }
 
@@ -1105,57 +1346,262 @@ function submitExam() {
   });
 
   const percentage = (score / currentExamQuestions.length) * 100;
-  const isPassed = percentage >= 60.0;
+  const isPassed = percentage >= 90.0;
+
+  // Track highest score
+  const prevScore = parseInt(localStorage.getItem(`day_${activeDay}_score`) || '0', 10);
+  if (score > prevScore) {
+    localStorage.setItem(`day_${activeDay}_score`, score.toString());
+  }
+
+  let attempts = parseInt(localStorage.getItem(`day_${activeDay}_attempts`) || '0', 10);
+  let lockoutTriggered = false;
 
   if (isPassed) {
     localStorage.setItem(`day_${activeDay}_passed`, "true");
-    localStorage.setItem(`day_${activeDay}_score`, score);
+    localStorage.setItem(`day_${activeDay}_attempts`, "0");
+    localStorage.setItem(`day_${activeDay}_lockout_until`, "0");
+  } else {
+    attempts++;
+    localStorage.setItem(`day_${activeDay}_attempts`, attempts.toString());
+
+    if (attempts >= 2) {
+      // Trigger 24-Hour Lockout!
+      const lockoutDuration = 24 * 60 * 60 * 1000;
+      const lockoutUntil = Date.now() + lockoutDuration;
+      localStorage.setItem(`day_${activeDay}_lockout_until`, lockoutUntil.toString());
+      lockoutTriggered = true;
+    }
   }
 
-  // Sync exam submission to Cloud Firestore
+  // Sync to Cloud Firestore
   if (currentUser && currentUser.uid && window.db) {
     try {
-      window.db.collection('learners').doc(currentUser.uid).collection('exams').doc(`day_${activeDay}`).set({
+      const lockoutVal = parseInt(localStorage.getItem(`day_${activeDay}_lockout_until`) || '0', 10);
+      const updateObj = {
+        [`day_${activeDay}_score`]: score,
+        [`day_${activeDay}_percentage`]: percentage,
+        [`day_${activeDay}_attempts`]: attempts,
+        [`day_${activeDay}_lockout_until`]: lockoutVal,
+        lastActivity: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (isPassed) {
+        updateObj[`day_${activeDay}_passed`] = true;
+      }
+      window.db.collection('learners').doc(currentUser.uid).set(updateObj, { merge: true });
+
+      window.db.collection('learners').doc(currentUser.uid).collection('exams').doc(`day_${activeDay}_attempt_${Date.now()}`).set({
         day: activeDay,
         score: score,
         total: currentExamQuestions.length,
         percentage: percentage,
         passed: isPassed,
+        attemptNumber: attempts,
+        lockoutTriggered: lockoutTriggered,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
-
-      if (isPassed) {
-        window.db.collection('learners').doc(currentUser.uid).set({
-          [`day_${activeDay}_passed`]: true,
-          [`day_${activeDay}_score`]: score,
-          lastActivity: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      }
       console.log("Exam score synchronized to Cloud Firestore.");
     } catch (e) {
       console.warn("Firestore exam save note:", e);
     }
   }
 
+  renderExamResultCard(score, percentage, isPassed, attempts, lockoutTriggered);
+  updateCredentialsUI();
+  updateExamLobbyState();
+  updateDayLockStates();
+}
+
+function renderExamResultCard(score, percentage, isPassed, attempts, lockoutTriggered) {
   document.getElementById('examActiveContainer').classList.add('hidden');
   const resultCard = document.getElementById('examResultCard');
   resultCard.classList.remove('hidden');
 
-  document.getElementById('resultFinalScoreText').innerText = `${score} / 100 (${percentage.toFixed(1)}%)`;
-  document.getElementById('resultStatusHeading').innerText = isPassed 
-    ? "🎉 CONGRATULATIONS! YOU PASSED!" 
-    : "REVIEW & RETRY";
-  document.getElementById('resultStatusDesc').innerText = isPassed
-    ? `You have cleared the benchmark! Your Day ${activeDay} Badge is unlocked.`
-    : `Passing score is 60%. Study the zero-assumption notes and re-attempt before 8:00 PM!`;
+  const scoreEl = document.getElementById('resultFinalScoreText');
+  const headingEl = document.getElementById('resultStatusHeading');
+  const descEl = document.getElementById('resultStatusDesc');
+  const iconBox = document.getElementById('resultIconBox');
+  const icon = document.getElementById('resultIcon');
+  const actionContainer = document.getElementById('resultActionButtons');
 
-  if (isPassed && window.confetti) {
-    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+  if (scoreEl) scoreEl.innerText = `${score} / 100 (${percentage.toFixed(1)}%)`;
+
+  if (isPassed) {
+    if (headingEl) headingEl.innerText = "🎉 OUTSTANDING! 90% BENCHMARK CLEARED!";
+    if (descEl) descEl.innerText = `Congratulations! You scored ${score}/100, surpassing the strict 90% benchmark. Your Day ${activeDay} Badge is now permanently unlocked and available for download!`;
+    if (iconBox) iconBox.className = "w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl";
+    if (icon) icon.className = "fa-solid fa-award";
+    if (actionContainer) {
+      actionContainer.innerHTML = `
+        <button onclick="switchTab('credentials')" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition">
+          <i class="fa-solid fa-medal mr-1.5"></i> VIEW & DOWNLOAD DAY ${activeDay} BADGE
+        </button>
+        ${activeDay < 3 ? `
+          <button onclick="selectDay(${activeDay + 1}); switchTab('notes');" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition">
+            PROCEED TO DAY ${activeDay + 1} <i class="fa-solid fa-arrow-right ml-1"></i>
+          </button>
+        ` : `
+          <button onclick="switchTab('credentials')" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition">
+            <i class="fa-solid fa-certificate mr-1.5"></i> CLAIM GRADUATION CERTIFICATE
+          </button>
+        `}
+      `;
+    }
+    if (window.confetti) {
+      confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+    }
+  } else if (lockoutTriggered) {
+    if (headingEl) headingEl.innerText = "🔒 24-HOUR LOCKOUT ACTIVATED";
+    if (descEl) descEl.innerText = `You scored ${score}/100. Both your initial attempt and retry were below the 90% benchmark. In accordance with bootcamp standards, this assessment is now locked for 24 hours. Please review Day ${activeDay} notes and practice Level 0 exercises during this period.`;
+    if (iconBox) iconBox.className = "w-16 h-16 mx-auto rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-3xl";
+    if (icon) icon.className = "fa-solid fa-lock";
+    if (actionContainer) {
+      actionContainer.innerHTML = `
+        <button onclick="switchTab('notes')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 shadow transition">
+          <i class="fa-solid fa-book-open mr-1.5"></i> REVIEW DAY ${activeDay} NOTES
+        </button>
+        <button onclick="switchTab('level0')" class="px-5 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs rounded-xl border border-amber-500/40 shadow transition">
+          <i class="fa-solid fa-microchip mr-1.5"></i> PRACTICE LEVEL 0 LABS
+        </button>
+      `;
+    }
+  } else {
+    // 1 attempt failed, 1 retry remaining
+    if (headingEl) headingEl.innerText = "⚠️ ATTEMPT 1 FAILED — 1 RETRY REMAINING";
+    if (descEl) descEl.innerText = `You scored ${score}/100. Passing requires at least 90%. You have exactly 1 RETRY remaining. If your retry scores below 90%, this assessment will be locked for 24 hours.`;
+    if (iconBox) iconBox.className = "w-16 h-16 mx-auto rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl";
+    if (icon) icon.className = "fa-solid fa-triangle-exclamation";
+    if (actionContainer) {
+      actionContainer.innerHTML = `
+        <button onclick="startTimedMockExam()" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg transition">
+          <i class="fa-solid fa-rotate-right mr-1.5"></i> START YOUR 1 RETRY NOW
+        </button>
+        <button onclick="switchTab('notes')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 shadow transition">
+          <i class="fa-solid fa-book-open mr-1.5"></i> REVIEW NOTES FIRST
+        </button>
+      `;
+    }
   }
 }
 
-// 9. Badges & Certificate Generation (PNG & Vector PDF)
+// 9. Badges & Certificate Generation & UI Synchronization
+function updateCredentialsUI() {
+  let allThreePassed = true;
+  let passedCount = 0;
+
+  [1, 2, 3].forEach(d => {
+    const isPassed = localStorage.getItem(`day_${d}_passed`) === 'true';
+    const score = localStorage.getItem(`day_${d}_score`) || '0';
+    const card = document.getElementById(`badgeCardDay${d}`);
+    const icon = document.getElementById(`badgeIconDay${d}`);
+    const lockBadge = document.getElementById(`badgeLockStatusDay${d}`);
+    const scoreText = document.getElementById(`badgeScoreTextDay${d}`);
+    const pngBtn = document.getElementById(`btnBadgePngDay${d}`);
+    const pdfBtn = document.getElementById(`btnBadgePdfDay${d}`);
+
+    if (isPassed) {
+      passedCount++;
+      if (card) {
+        card.className = "relative bg-gradient-to-b from-slate-900 to-indigo-950/40 border-2 border-emerald-500/70 rounded-xl p-4 text-center space-y-3 shadow-lg shadow-emerald-500/10";
+      }
+      if (icon) {
+        const colors = ["", "from-indigo-600 to-sky-400", "from-emerald-600 to-teal-400", "from-amber-500 to-rose-400"];
+        icon.className = `w-16 h-16 mx-auto rounded-full bg-gradient-to-tr ${colors[d]} flex items-center justify-center text-2xl text-white shadow-lg`;
+      }
+      if (lockBadge) {
+        lockBadge.className = "text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold";
+        lockBadge.innerHTML = `<i class="fa-solid fa-unlock"></i> UNLOCKED (${score}%)`;
+      }
+      if (scoreText) {
+        scoreText.innerHTML = `<span class="text-emerald-400 font-semibold">Passed Benchmark: ${score}/100</span>`;
+      }
+      if (pngBtn) {
+        pngBtn.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] rounded-lg border border-slate-600 font-bold shadow transition cursor-pointer";
+      }
+      if (pdfBtn) {
+        const pdfColors = ["", "bg-indigo-600 hover:bg-indigo-500", "bg-emerald-600 hover:bg-emerald-500", "bg-amber-600 hover:bg-amber-500"];
+        pdfBtn.className = `px-3 py-1.5 ${pdfColors[d]} text-white text-[10px] rounded-lg font-bold shadow transition cursor-pointer`;
+      }
+    } else {
+      allThreePassed = false;
+      if (card) {
+        card.className = "relative bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center space-y-3 opacity-90";
+      }
+      if (icon) {
+        icon.className = "w-16 h-16 mx-auto rounded-full bg-slate-900 text-slate-600 flex items-center justify-center text-2xl border border-slate-800";
+      }
+      if (lockBadge) {
+        lockBadge.className = "text-[9px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold";
+        lockBadge.innerHTML = `<i class="fa-solid fa-lock"></i> LOCKED`;
+      }
+      if (scoreText) {
+        scoreText.innerHTML = `<span class="text-rose-400/80">Need ≥90% • Current: ${score}/100</span>`;
+      }
+      if (pngBtn) {
+        pngBtn.className = "px-3 py-1.5 bg-slate-900 text-slate-600 text-[10px] rounded-lg border border-slate-800/80 font-medium cursor-not-allowed";
+      }
+      if (pdfBtn) {
+        pdfBtn.className = "px-3 py-1.5 bg-slate-900 text-slate-600 text-[10px] rounded-lg border border-slate-800/80 font-medium cursor-not-allowed";
+      }
+    }
+  });
+
+  // Certificate Card Update
+  const certCard = document.getElementById('certificateCard');
+  const certStatus = document.getElementById('certificateLockStatus');
+  const certReq = document.getElementById('certificateReqDetails');
+  const certPngBtn = document.getElementById('btnCertPng');
+  const certPdfBtn = document.getElementById('btnCertPdf');
+
+  if (allThreePassed || testModeOverride) {
+    if (certCard) {
+      certCard.className = "relative bg-gradient-to-r from-indigo-950 via-slate-900 to-amber-950/40 border-2 border-amber-500 rounded-2xl p-6 text-center space-y-3 shadow-2xl shadow-amber-500/20";
+    }
+    if (certStatus) {
+      certStatus.className = "text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-black animate-pulse";
+      certStatus.innerHTML = `<i class="fa-solid fa-crown text-amber-400"></i> UNLOCKED • 3/3 DAYS PASSED (≥90%)`;
+    }
+    if (certReq) {
+      const s1 = localStorage.getItem('day_1_score') || '90';
+      const s2 = localStorage.getItem('day_2_score') || '90';
+      const s3 = localStorage.getItem('day_3_score') || '90';
+      certReq.innerHTML = `<span class="text-amber-200 font-medium">All 3 daily assessments passed! Day 1: ${s1}% | Day 2: ${s2}% | Day 3: ${s3}%</span>`;
+    }
+    if (certPngBtn) {
+      certPngBtn.className = "px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-600 shadow flex items-center gap-2 cursor-pointer";
+    }
+    if (certPdfBtn) {
+      certPdfBtn.className = "px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer";
+    }
+  } else {
+    if (certCard) {
+      certCard.className = "relative bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center space-y-3 opacity-90";
+    }
+    if (certStatus) {
+      certStatus.className = "text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold";
+      certStatus.innerHTML = `<i class="fa-solid fa-lock"></i> LOCKED (${passedCount}/3 Days Passed)`;
+    }
+    if (certReq) {
+      certReq.innerHTML = `<span class="text-slate-400">Requires scoring <strong>≥90%</strong> on Day 1, Day 2, and Day 3 assessments. (${3 - passedCount} more day(s) required)</span>`;
+    }
+    if (certPngBtn) {
+      certPngBtn.className = "px-4 py-2 bg-slate-900 text-slate-600 font-semibold text-xs rounded-xl border border-slate-800 flex items-center gap-2 cursor-not-allowed";
+    }
+    if (certPdfBtn) {
+      certPdfBtn.className = "px-4 py-2 bg-slate-900 text-slate-600 font-extrabold text-xs rounded-xl border border-slate-800 flex items-center gap-2 cursor-not-allowed";
+    }
+  }
+}
+
 function downloadBadge(format, dayNum) {
+  const isPassed = localStorage.getItem(`day_${dayNum}_passed`) === 'true';
+  const score = parseInt(localStorage.getItem(`day_${dayNum}_score`) || '0', 10);
+
+  if (!isPassed && !testModeOverride) {
+    alert(`🔒 Day ${dayNum} Badge is Locked!\n\nPassing Benchmark: Score ≥90% on Day ${dayNum}'s 100-Question Final Assessment.\nYour current score: ${score}/100.\n\nPlease achieve 90% or higher to unlock and download this badge.`);
+    return;
+  }
+
   const canvas = document.getElementById('credentialExportCanvas');
   const ctx = canvas.getContext('2d');
 
@@ -1203,7 +1649,7 @@ function downloadBadge(format, dayNum) {
   ctx.fillStyle = "#64748b";
   ctx.font = "20px system-ui";
   ctx.fillText("Verified Google Account: " + email, 600, 440);
-  ctx.fillText("60-Minute Timed Mock Passed • Score: 100/100", 600, 480);
+  ctx.fillText(`60-Minute Timed Mock Passed • Verified Score: ${score}/100 (${score}%) • Benchmark ≥90%`, 600, 480);
 
   // Unique Hash & Verification
   const hash = "SHA256-KAPIL-DEB-" + Math.random().toString(36).substring(2, 12).toUpperCase();
@@ -1225,6 +1671,18 @@ function downloadBadge(format, dayNum) {
 }
 
 function downloadCertificate(format) {
+  const d1Passed = localStorage.getItem('day_1_passed') === 'true';
+  const d2Passed = localStorage.getItem('day_2_passed') === 'true';
+  const d3Passed = localStorage.getItem('day_3_passed') === 'true';
+
+  if ((!d1Passed || !d2Passed || !d3Passed) && !testModeOverride) {
+    const s1 = localStorage.getItem('day_1_score') || '0';
+    const s2 = localStorage.getItem('day_2_score') || '0';
+    const s3 = localStorage.getItem('day_3_score') || '0';
+    alert(`🔒 Official Certificate of Excellence is Locked!\n\nRequirement: Score ≥90% on ALL 3 Daily Final Assessments.\n\nCurrent Status:\n• Day 1: ${d1Passed ? '✅ PASSED (' + s1 + '/100)' : '🔒 LOCKED (Need ≥90%, Current: ' + s1 + '/100)'}\n• Day 2: ${d2Passed ? '✅ PASSED (' + s2 + '/100)' : '🔒 LOCKED (Need ≥90%, Current: ' + s2 + '/100)'}\n• Day 3: ${d3Passed ? '✅ PASSED (' + s3 + '/100)' : '🔒 LOCKED (Need ≥90%, Current: ' + s3 + '/100)'}\n\nPlease complete all 3 days with ≥90% to claim your official graduation certificate.`);
+    return;
+  }
+
   const canvas = document.getElementById('credentialExportCanvas');
   const ctx = canvas.getContext('2d');
 
@@ -1257,15 +1715,22 @@ function downloadCertificate(format) {
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "20px system-ui";
-  ctx.fillText("for successful completion of the 15-Hour Intensive Program", 600, 360);
+  ctx.fillText("for successfully completing the 15-Hour Intensive Program with Honors (≥90%)", 600, 360);
 
   ctx.fillStyle = "#38bdf8";
   ctx.font = "bold 32px system-ui";
   ctx.fillText("Digital Empowerment Bootcamp (Part 1)", 600, 410);
 
+  const s1 = localStorage.getItem('day_1_score') || '90';
+  const s2 = localStorage.getItem('day_2_score') || '90';
+  const s3 = localStorage.getItem('day_3_score') || '90';
+  ctx.fillStyle = "#eab308";
+  ctx.font = "18px monospace";
+  ctx.fillText(`Honors Mastery: Day 1: ${s1}% | Day 2: ${s2}% | Day 3: ${s3}%`, 600, 450);
+
   ctx.fillStyle = "#94a3b8";
-  ctx.font = "18px system-ui";
-  ctx.fillText("IT Foundations, Operating Systems, Modular C, Recursion, RDBMS, MS-Excel & Web Engineering", 600, 450);
+  ctx.font = "16px system-ui";
+  ctx.fillText("IT Foundations, Operating Systems, Modular C, Recursion, RDBMS, MS-Excel & Web Engineering", 600, 480);
 
   // Signature
   ctx.fillStyle = "#ffffff";
@@ -1280,7 +1745,7 @@ function downloadCertificate(format) {
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "18px system-ui";
-  ctx.fillText("Founder & Chief Instructor", 600, 640);
+  ctx.fillText("Founder & Chief Ecosystem Architect", 600, 640);
 
   if (format === 'png') {
     const link = document.createElement('a');
