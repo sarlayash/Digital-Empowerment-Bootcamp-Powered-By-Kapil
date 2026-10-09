@@ -21,15 +21,16 @@ let lifelinesAvailable = 1;
 let wheelCanvas = null;
 let wheelCtx = null;
 let isSpinning = false;
+let currentWheelRotation = 0;
 const wheelPrizes = [
-  "+50 Knowledge XP",
-  "50/50 Exam Lifeline",
-  "Syntax Cheat Sheet",
-  "Gold Badge Seal",
-  "Bonus Practice Lab",
-  "2x XP Multiplier",
-  "Kapil Kudos Shoutout",
-  "Tomorrow Bonus Spin"
+  "+50 XP Boost",
+  "50/50 Lifeline",
+  "Cheat Sheet",
+  "Gold Badge",
+  "Practice Lab",
+  "2x Multiplier",
+  "Kapil Kudos",
+  "Bonus Spin"
 ];
 const wheelColors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
@@ -94,6 +95,13 @@ function updateAppScreenState() {
     if (journeyDashboard) journeyDashboard.classList.remove('hidden');
     if (mobileNav) mobileNav.classList.remove('hidden');
     selectDay(activeDay);
+
+    // Guaranteed spinning wheel render once visible in DOM
+    requestAnimationFrame(() => {
+      initSpinningWheel();
+      drawWheelGraphic();
+      updateSpinWheelUI();
+    });
   }
 }
 
@@ -265,9 +273,21 @@ async function loadLearnerProgressFromFirestore(uid) {
         updateLevel0ProgressUI();
         renderLevel0ExerciseList();
       }
+      // Sync spin history
+      for (let d = 1; d <= 3; d++) {
+        try {
+          const spinDoc = await window.db.collection('learners').doc(uid).collection('spins').doc(`day_${d}`).get();
+          if (spinDoc.exists && spinDoc.data().prize) {
+            const userKey = currentUser ? currentUser.email : 'guest';
+            localStorage.setItem(`spun_day_${d}_${userKey}`, spinDoc.data().prize);
+          }
+        } catch (spinErr) {}
+      }
       updateTimeGateStatus();
       updateExamLobbyState();
       updateCredentialsUI();
+      updateSpinWheelUI();
+      drawWheelGraphic();
     }
   } catch (e) {
     console.warn("Firestore progress load note:", e);
@@ -436,6 +456,10 @@ function selectDay(dayNum) {
   // Update Exam Lobby & Credentials UI
   updateExamLobbyState();
   updateCredentialsUI();
+
+  // Update Spinning Wheel state for current day
+  updateSpinWheelUI();
+  drawWheelGraphic();
 }
 
 function switchTab(tabId) {
@@ -854,52 +878,164 @@ function initSpinningWheel() {
   wheelCanvas = document.getElementById('wheelCanvas');
   if (!wheelCanvas) return;
   wheelCtx = wheelCanvas.getContext('2d');
-  drawWheelGraphic(0);
+
+  if (typeof IntersectionObserver !== 'undefined' && !wheelCanvas._wheelObsAttached) {
+    wheelCanvas._wheelObsAttached = true;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          drawWheelGraphic();
+          updateSpinWheelUI();
+        }
+      });
+    }, { threshold: 0.05 });
+    observer.observe(wheelCanvas);
+  }
+
+  drawWheelGraphic();
+  updateSpinWheelUI();
 }
 
-function drawWheelGraphic(startAngle) {
+function drawWheelGraphic() {
+  wheelCanvas = document.getElementById('wheelCanvas');
+  if (!wheelCanvas) return;
+  wheelCtx = wheelCanvas.getContext('2d');
   if (!wheelCtx) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const displaySize = 190;
+
+  // High-DPI buffer scaling for crystal clear rendering on retina/mobile
+  wheelCanvas.width = Math.round(displaySize * dpr);
+  wheelCanvas.height = Math.round(displaySize * dpr);
+  wheelCanvas.style.width = displaySize + 'px';
+  wheelCanvas.style.height = displaySize + 'px';
+
+  wheelCtx.save();
+  wheelCtx.scale(dpr, dpr);
+
+  const cx = displaySize / 2;
+  const cy = displaySize / 2;
+  const radius = (displaySize / 2) - 8;
   const numSlices = wheelPrizes.length;
   const sliceAngle = (2 * Math.PI) / numSlices;
-  const cx = 95;
-  const cy = 95;
-  const radius = 90;
 
-  wheelCtx.clearRect(0, 0, 190, 190);
+  // Slice 0 center is aligned at 12 o'clock (-PI/2) directly under pointer
+  const startAngle = -Math.PI / 2 - (sliceAngle / 2);
 
+  wheelCtx.clearRect(0, 0, displaySize, displaySize);
+
+  // Outer Golden Rim & Base Slate Ring
+  wheelCtx.beginPath();
+  wheelCtx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
+  wheelCtx.fillStyle = '#0f172a';
+  wheelCtx.fill();
+  wheelCtx.lineWidth = 3.5;
+  wheelCtx.strokeStyle = '#f59e0b';
+  wheelCtx.stroke();
+
+  // Draw 8 Vibrant Color Wedges
   for (let i = 0; i < numSlices; i++) {
     const angle = startAngle + i * sliceAngle;
     wheelCtx.beginPath();
     wheelCtx.fillStyle = wheelColors[i % wheelColors.length];
     wheelCtx.moveTo(cx, cy);
     wheelCtx.arc(cx, cy, radius, angle, angle + sliceAngle);
-    wheelCtx.lineTo(cx, cy);
+    wheelCtx.closePath();
     wheelCtx.fill();
 
-    // Wheel border
-    wheelCtx.strokeStyle = "#0f172a";
-    wheelCtx.lineWidth = 1.5;
+    // Wedge border
+    wheelCtx.strokeStyle = '#0f172a';
+    wheelCtx.lineWidth = 2;
     wheelCtx.stroke();
 
-    // Text Label
+    // Wedge Text Label
     wheelCtx.save();
     wheelCtx.translate(cx, cy);
     wheelCtx.rotate(angle + sliceAngle / 2);
-    wheelCtx.textAlign = "right";
-    wheelCtx.fillStyle = "#ffffff";
-    wheelCtx.font = "bold 8px system-ui";
-    wheelCtx.fillText(wheelPrizes[i].substring(0, 14), radius - 8, 3);
+    wheelCtx.textAlign = 'right';
+    wheelCtx.textBaseline = 'middle';
+    
+    // High-contrast stroke outline
+    wheelCtx.font = 'bold 8.5px system-ui, -apple-system, sans-serif';
+    wheelCtx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+    wheelCtx.lineWidth = 2.5;
+    wheelCtx.strokeText(wheelPrizes[i], radius - 9, 0);
+    
+    wheelCtx.fillStyle = '#ffffff';
+    wheelCtx.fillText(wheelPrizes[i], radius - 9, 0);
     wheelCtx.restore();
   }
 
-  // Center Hub
+  // 16 Golden Perimeter Studs / Rivets
+  for (let i = 0; i < numSlices * 2; i++) {
+    const studAngle = startAngle + i * (sliceAngle / 2);
+    const sx = cx + (radius + 4) * Math.cos(studAngle);
+    const sy = cy + (radius + 4) * Math.sin(studAngle);
+    wheelCtx.beginPath();
+    wheelCtx.arc(sx, sy, 2, 0, 2 * Math.PI);
+    wheelCtx.fillStyle = '#fde047';
+    wheelCtx.fill();
+    wheelCtx.strokeStyle = '#d97706';
+    wheelCtx.lineWidth = 0.5;
+    wheelCtx.stroke();
+  }
+
+  // 3D Metallic Center Hub
   wheelCtx.beginPath();
-  wheelCtx.arc(cx, cy, 14, 0, 2 * Math.PI);
-  wheelCtx.fillStyle = "#ffffff";
+  wheelCtx.arc(cx, cy, 20, 0, 2 * Math.PI);
+  wheelCtx.fillStyle = '#0f172a';
   wheelCtx.fill();
-  wheelCtx.strokeStyle = "#6366f1";
+  wheelCtx.strokeStyle = '#f59e0b';
   wheelCtx.lineWidth = 3;
   wheelCtx.stroke();
+
+  wheelCtx.beginPath();
+  wheelCtx.arc(cx, cy, 14, 0, 2 * Math.PI);
+  wheelCtx.fillStyle = '#4f46e5';
+  wheelCtx.fill();
+  wheelCtx.strokeStyle = '#ffffff';
+  wheelCtx.lineWidth = 1.5;
+  wheelCtx.stroke();
+
+  wheelCtx.beginPath();
+  wheelCtx.arc(cx, cy, 6, 0, 2 * Math.PI);
+  wheelCtx.fillStyle = '#f59e0b';
+  wheelCtx.fill();
+
+  wheelCtx.restore();
+}
+
+function updateSpinWheelUI() {
+  const userKey = currentUser ? currentUser.email : 'guest';
+  const todayKey = `spun_day_${activeDay}_${userKey}`;
+  const alreadyWon = localStorage.getItem(todayKey);
+  const resultEl = document.getElementById('spinRewardResult');
+  const spinBtn = document.getElementById('spinWheelBtn');
+
+  if (alreadyWon) {
+    if (resultEl) {
+      resultEl.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold text-xs"><i class="fa-solid fa-gift text-amber-400"></i> WON TODAY: ${alreadyWon}</span>`;
+    }
+    if (spinBtn) {
+      if (testModeOverride) {
+        spinBtn.innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> SPIN AGAIN (TEST OVERRIDE)`;
+        spinBtn.classList.remove('from-emerald-600', 'to-teal-600');
+        spinBtn.classList.add('from-amber-500', 'to-amber-600');
+      } else {
+        spinBtn.innerHTML = `<i class="fa-solid fa-check mr-1"></i> REWARD CLAIMED TODAY`;
+        spinBtn.classList.remove('from-amber-500', 'to-amber-600');
+        spinBtn.classList.add('from-emerald-600', 'to-teal-600');
+      }
+    }
+  } else {
+    if (resultEl) resultEl.innerHTML = '';
+    if (spinBtn) {
+      spinBtn.innerHTML = `<i class="fa-solid fa-dice mr-1"></i> SPIN THE WHEEL NOW`;
+      spinBtn.classList.remove('from-emerald-600', 'to-teal-600');
+      spinBtn.classList.add('from-amber-500', 'to-amber-600');
+    }
+  }
 }
 
 function spinWheel() {
@@ -910,24 +1046,44 @@ function spinWheel() {
     return;
   }
 
-  const todayKey = `spun_day_${activeDay}_${currentUser ? currentUser.email : 'guest'}`;
+  const userKey = currentUser ? currentUser.email : 'guest';
+  const todayKey = `spun_day_${activeDay}_${userKey}`;
   if (localStorage.getItem(todayKey) && !testModeOverride) {
     alert("Daily spin quota used for today! Next spin unlocks tomorrow at 08:00 AM.");
     return;
   }
 
+  if (!wheelCanvas || !wheelCtx) {
+    initSpinningWheel();
+  }
+
   isSpinning = true;
-  playWheelSound();
+  const spinBtn = document.getElementById('spinWheelBtn');
+  if (spinBtn) {
+    spinBtn.disabled = true;
+    spinBtn.classList.add('opacity-75', 'cursor-not-allowed');
+  }
 
-  const extraSpins = 5 + Math.floor(Math.random() * 5);
+  // Pick random prize index (0 to 7)
   const prizeIdx = Math.floor(Math.random() * wheelPrizes.length);
-  const degrees = (extraSpins * 360) + (360 - (prizeIdx * 45)) - 22.5;
+  const extraFullTurns = 5 + Math.floor(Math.random() * 4); // 5 to 8 full spins
+  
+  // Calculate clockwise delta angle to land prizeIdx dead-center under the 12 o'clock pointer
+  const deltaDegrees = (extraFullTurns * 360) - (prizeIdx * 45);
+  currentWheelRotation += deltaDegrees;
 
-  wheelCanvas.style.transition = "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
-  wheelCanvas.style.transform = `rotate(${degrees}deg)`;
+  // Realistic wheel ticker audio
+  playWheelSpinningAudioSequence(4500);
+
+  wheelCanvas.style.transition = "transform 4.5s cubic-bezier(0.15, 0.85, 0.15, 1)";
+  wheelCanvas.style.transform = `rotate(${currentWheelRotation}deg)`;
 
   setTimeout(() => {
     isSpinning = false;
+    if (spinBtn) {
+      spinBtn.disabled = false;
+      spinBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+    }
     const won = wheelPrizes[prizeIdx];
     localStorage.setItem(todayKey, won);
 
@@ -952,29 +1108,53 @@ function spinWheel() {
       alert(`🎉 SPIN RESULT: You won ${won}!\nBoost credited to your profile.`);
     }
 
-    if (window.confetti) confetti({ particleCount: 80, spread: 70 });
-    document.getElementById('spinRewardResult').innerText = `🎉 WON: ${won}`;
-  }, 4100);
+    if (window.confetti) confetti({ particleCount: 90, spread: 75, origin: { y: 0.6 } });
+    updateSpinWheelUI();
+  }, 4600);
 }
 
-function playWheelSound() {
+function playWheelSpinningAudioSequence(durationMs) {
   try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.3);
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtxClass) return;
+    const audioCtx = new AudioCtxClass();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const startTime = audioCtx.currentTime;
+    let clickTime = 0;
+    let interval = 0.05; // 50ms initial tick
+    
+    while (clickTime < (durationMs / 1000)) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(520 + Math.random() * 80, startTime + clickTime);
+      gain.gain.setValueAtTime(0.06, startTime + clickTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + clickTime + 0.025);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(startTime + clickTime);
+      osc.stop(startTime + clickTime + 0.025);
+
+      clickTime += interval;
+      interval *= 1.05; // gradual deceleration
+    }
   } catch (e) {
     // Audio synthesis fallback
   }
 }
+
+// Window resize & visibility change triggers
+window.addEventListener('resize', () => {
+  drawWheelGraphic();
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    drawWheelGraphic();
+    updateSpinWheelUI();
+  }
+});
 
 // ========================================================
 // 8. 100-QUESTION 60-MINUTE TIMED FINAL MOCK ASSESSMENT
