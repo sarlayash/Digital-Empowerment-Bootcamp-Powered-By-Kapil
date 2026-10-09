@@ -289,6 +289,14 @@ async function loadLearnerProgressFromFirestore(uid) {
           }
         } catch (spinErr) {}
       }
+      // Sync 5 Mock Assessments progress
+      for (let m = 1; m <= 5; m++) {
+        if (data[`mock_${m}_score`] !== undefined) localStorage.setItem(`mock_${m}_score`, String(data[`mock_${m}_score`]));
+        if (data[`mock_${m}_passed`]) localStorage.setItem(`mock_${m}_passed`, 'true');
+        if (data[`mock_${m}_attempts`] !== undefined) localStorage.setItem(`mock_${m}_attempts`, String(data[`mock_${m}_attempts`]));
+      }
+      renderMockSeriesCards();
+
       updateTimeGateStatus();
       updateExamLobbyState();
       updateCredentialsUI();
@@ -443,7 +451,7 @@ function selectDay(dayNum) {
 
 function switchTab(tabId) {
   currentTab = tabId;
-  const tabs = ['notes', 'level0', 'pretest', 'ide', 'assessment', 'credentials'];
+  const tabs = ['notes', 'level0', 'mocktests', 'pretest', 'ide', 'assessment', 'credentials'];
 
   tabs.forEach(t => {
     const content = document.getElementById('tabContent' + capitalize(t));
@@ -466,6 +474,8 @@ function switchTab(tabId) {
     loadIdeLanguageTemplate();
   } else if (tabId === 'level0') {
     renderCurrentLevel0Exercise();
+  } else if (tabId === 'mocktests') {
+    renderMockSeriesCards();
   } else if (tabId === 'assessment') {
     updateExamLobbyState();
   } else if (tabId === 'credentials') {
@@ -1634,6 +1644,419 @@ function renderExamResultCard(score, percentage, isPassed, attempts, lockoutTrig
   }
 }
 
+// ========================================================
+// 5 MOCK ASSESSMENTS ENGINE (25 MCQs EACH - ZERO REPEATS)
+// ========================================================
+let activeMockId = null;
+let activeMockQuestions = [];
+let mockUserAnswers = {}; // question index -> selected option index
+let mockTimerInterval = null;
+let mockTimeRemainingSeconds = 25 * 60; // 25 minutes
+
+function renderMockSeriesCards() {
+  const container = document.getElementById('mockCardsGrid');
+  if (!container || typeof MOCK_ASSESSMENTS_DATA === 'undefined') return;
+
+  const mockIds = ["1", "2", "3", "4", "5"];
+  let totalPassed = 0;
+  let totalAttempted = 0;
+  let allScores = [];
+
+  const cardsHtml = mockIds.map(id => {
+    const data = MOCK_ASSESSMENTS_DATA[id];
+    if (!data) return '';
+
+    const savedScore = localStorage.getItem(`mock_${id}_score`);
+    const isPassed = localStorage.getItem(`mock_${id}_passed`) === 'true';
+    const attempts = parseInt(localStorage.getItem(`mock_${id}_attempts`) || '0', 10);
+
+    let statusBadge = '';
+    let scoreDisplay = '';
+    let btnText = 'Start Assessment';
+    let btnClass = 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white';
+
+    if (savedScore !== null) {
+      totalAttempted++;
+      const scoreNum = parseInt(savedScore, 10);
+      allScores.push(scoreNum);
+      const rawScore = Math.round((scoreNum / 100) * 25);
+
+      if (isPassed) {
+        totalPassed++;
+        statusBadge = `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold font-mono"><i class="fa-solid fa-circle-check mr-1"></i>PASSED</span>`;
+        scoreDisplay = `<p class="text-xs font-mono font-bold text-emerald-400 mt-1">${rawScore}/25 (${scoreNum}%)</p>`;
+        btnText = 'Retake Assessment';
+        btnClass = 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700';
+      } else {
+        statusBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold font-mono"><i class="fa-solid fa-rotate mr-1"></i>RETRY NEEDED</span>`;
+        scoreDisplay = `<p class="text-xs font-mono font-bold text-amber-400 mt-1">${rawScore}/25 (${scoreNum}%)</p>`;
+        btnText = 'Retake Assessment';
+        btnClass = 'bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white';
+      }
+    } else {
+      statusBadge = `<span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono">Not Attempted</span>`;
+      scoreDisplay = `<p class="text-xs font-mono text-slate-500 mt-1">Passing score: ≥ 90% (23/25)</p>`;
+    }
+
+    const domainIcons = {
+      "1": "fa-microchip text-indigo-400",
+      "2": "fa-network-wired text-sky-400",
+      "3": "fa-shield-halved text-rose-400",
+      "4": "fa-table-cells text-amber-400",
+      "5": "fa-brain text-teal-400"
+    };
+
+    return `
+      <div class="bg-slate-950 border ${isPassed ? 'border-emerald-500/50 shadow-emerald-500/5' : 'border-slate-800'} rounded-2xl p-4 flex flex-col justify-between shadow-xl space-y-3 transition hover:border-slate-700">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold">MOCK ${id} OF 5</span>
+            ${statusBadge}
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-sm">
+              <i class="fa-solid ${domainIcons[id] || 'fa-graduation-cap'}"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white leading-snug">${escapeHtml(data.title.replace(/^Mock Assessment \d+:\s*/, ''))}</h4>
+              <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${escapeHtml(data.desc)}</p>
+            </div>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-500 font-mono uppercase">Your Score</span>
+              ${scoreDisplay}
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-500 font-mono uppercase">Attempts</span>
+              <p class="text-xs font-mono text-slate-300 mt-1">${attempts}</p>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="startMockTest('${id}')" class="w-full py-2.5 px-3 rounded-xl font-bold text-xs transition shadow flex items-center justify-center gap-1.5 ${btnClass}">
+          <i class="fa-solid fa-play text-[10px]"></i> ${btnText}
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = cardsHtml;
+
+  // Update Series Summary counters
+  const summaryScoreEl = document.getElementById('mockSeriesSummaryScore');
+  const avgScoreEl = document.getElementById('mockSeriesAvgDisplay');
+  const passedCountEl = document.getElementById('mockSeriesPassedCount');
+
+  if (summaryScoreEl) summaryScoreEl.innerText = `${totalAttempted} / 5 Completed`;
+  if (passedCountEl) passedCountEl.innerText = `${totalPassed} / 5`;
+  if (avgScoreEl) {
+    const avg = allScores.length > 0 ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+    avgScoreEl.innerText = `${avg}%`;
+  }
+}
+
+function startMockTest(mockId) {
+  if (typeof MOCK_ASSESSMENTS_DATA === 'undefined' || !MOCK_ASSESSMENTS_DATA[mockId]) {
+    alert("Mock assessment data loading...");
+    return;
+  }
+
+  activeMockId = mockId;
+  const mockData = MOCK_ASSESSMENTS_DATA[mockId];
+  activeMockQuestions = mockData.questions;
+  mockUserAnswers = {};
+  mockTimeRemainingSeconds = (mockData.durationMinutes || 25) * 60;
+
+  // UI state transitions
+  document.getElementById('mockSeriesHubView')?.classList.add('hidden');
+  document.getElementById('mockResultContainer')?.classList.add('hidden');
+  const activeContainer = document.getElementById('mockActiveTestContainer');
+  if (activeContainer) activeContainer.classList.remove('hidden');
+
+  // Header data
+  const badgeEl = document.getElementById('activeMockBadge');
+  const titleEl = document.getElementById('activeMockTitle');
+  if (badgeEl) badgeEl.innerText = `MOCK ASSESSMENT ${mockId} OF 5`;
+  if (titleEl) titleEl.innerText = mockData.title;
+
+  // Render Questions list
+  renderMockQuestionsList();
+  renderMockPaletteGrid();
+  updateMockAnsweredCount();
+
+  // Start 25-minute timer
+  clearInterval(mockTimerInterval);
+  updateMockTimerDisplay();
+  mockTimerInterval = setInterval(() => {
+    mockTimeRemainingSeconds--;
+    updateMockTimerDisplay();
+    if (mockTimeRemainingSeconds <= 0) {
+      clearInterval(mockTimerInterval);
+      alert("⏰ Time is up! Automatically submitting your mock assessment.");
+      submitActiveMockTest(true);
+    }
+  }, 1000);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateMockTimerDisplay() {
+  const display = document.getElementById('mockTimerDisplay');
+  if (!display) return;
+  const minutes = Math.floor(mockTimeRemainingSeconds / 60);
+  const seconds = mockTimeRemainingSeconds % 60;
+  display.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  if (mockTimeRemainingSeconds < 300) {
+    display.className = "text-xl font-mono font-black text-rose-500 animate-pulse";
+  } else {
+    display.className = "text-xl font-mono font-black text-rose-400";
+  }
+}
+
+function renderMockPaletteGrid() {
+  const grid = document.getElementById('mockPaletteGrid');
+  if (!grid) return;
+  grid.innerHTML = activeMockQuestions.map((q, idx) => {
+    const isAnswered = mockUserAnswers[idx] !== undefined;
+    return `
+      <button type="button" id="mock_palette_btn_${idx}" onclick="jumpToMockQuestion(${idx})" class="w-7 h-7 rounded text-[11px] font-mono font-bold transition flex items-center justify-center ${
+        isAnswered ? 'bg-emerald-600 text-white shadow' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+      }">
+        ${idx + 1}
+      </button>
+    `;
+  }).join('');
+}
+
+function renderMockQuestionsList() {
+  const container = document.getElementById('mockQuestionsListContainer');
+  if (!container) return;
+
+  container.innerHTML = activeMockQuestions.map((q, qIdx) => {
+    const letters = ['A', 'B', 'C', 'D'];
+    const optionsHtml = q.opts.map((opt, optIdx) => {
+      const isSelected = mockUserAnswers[qIdx] === optIdx;
+      return `
+        <label onclick="selectMockAnswer(${qIdx}, ${optIdx})" class="p-3 rounded-xl border transition flex items-center space-x-3 cursor-pointer ${
+          isSelected 
+            ? 'bg-teal-500/15 border-teal-500 text-white font-medium shadow-md' 
+            : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900'
+        }" id="mock_opt_label_${qIdx}_${optIdx}">
+          <input type="radio" name="mock_q_${qIdx}" value="${optIdx}" ${isSelected ? 'checked' : ''} class="hidden">
+          <span class="w-6 h-6 rounded-md flex items-center justify-center font-mono font-bold text-xs ${
+            isSelected ? 'bg-teal-500 text-slate-950 font-black' : 'bg-slate-800 text-slate-400'
+          }" id="mock_opt_badge_${qIdx}_${optIdx}">
+            ${letters[optIdx]}
+          </span>
+          <span class="text-xs leading-relaxed flex-1">${escapeHtml(opt)}</span>
+        </label>
+      `;
+    }).join('');
+
+    return `
+      <div id="mock_question_card_${qIdx}" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 md:p-5 space-y-3 shadow-lg">
+        <div class="flex items-center justify-between border-b border-slate-900 pb-2">
+          <span class="text-[10px] font-mono text-teal-400 uppercase font-bold tracking-wider">Question ${qIdx + 1} of ${activeMockQuestions.length}</span>
+          <span class="text-[10px] font-mono text-slate-500 px-2 py-0.5 rounded bg-slate-900">${escapeHtml(q.topic || 'General')}</span>
+        </div>
+        <p class="text-xs md:text-sm font-semibold text-white leading-relaxed">${escapeHtml(q.q)}</p>
+        <div class="space-y-2 pt-1">
+          ${optionsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectMockAnswer(qIdx, optIdx) {
+  mockUserAnswers[qIdx] = optIdx;
+
+  // Update radio options styling in question card
+  for (let i = 0; i < 4; i++) {
+    const lbl = document.getElementById(`mock_opt_label_${qIdx}_${i}`);
+    const badge = document.getElementById(`mock_opt_badge_${qIdx}_${i}`);
+    if (lbl && badge) {
+      if (i === optIdx) {
+        lbl.className = "p-3 rounded-xl border transition flex items-center space-x-3 cursor-pointer bg-teal-500/15 border-teal-500 text-white font-medium shadow-md";
+        badge.className = "w-6 h-6 rounded-md flex items-center justify-center font-mono font-bold text-xs bg-teal-500 text-slate-950 font-black";
+      } else {
+        lbl.className = "p-3 rounded-xl border transition flex items-center space-x-3 cursor-pointer bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900";
+        badge.className = "w-6 h-6 rounded-md flex items-center justify-center font-mono font-bold text-xs bg-slate-800 text-slate-400";
+      }
+    }
+  }
+
+  // Update palette button
+  const pBtn = document.getElementById(`mock_palette_btn_${qIdx}`);
+  if (pBtn) {
+    pBtn.className = "w-7 h-7 rounded text-[11px] font-mono font-bold transition flex items-center justify-center bg-emerald-600 text-white shadow";
+  }
+
+  updateMockAnsweredCount();
+}
+
+function updateMockAnsweredCount() {
+  const count = Object.keys(mockUserAnswers).length;
+  const total = activeMockQuestions.length;
+  const label = document.getElementById('mockAnsweredCountLabel');
+  if (label) {
+    label.innerText = `${count} / ${total} Answered`;
+  }
+}
+
+function jumpToMockQuestion(qIdx) {
+  const el = document.getElementById(`mock_question_card_${qIdx}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('ring-2', 'ring-teal-500');
+    setTimeout(() => el.classList.remove('ring-2', 'ring-teal-500'), 1200);
+  }
+}
+
+function submitActiveMockTest(force = false) {
+  if (!activeMockId || activeMockQuestions.length === 0) return;
+
+  const answeredCount = Object.keys(mockUserAnswers).length;
+  const totalCount = activeMockQuestions.length;
+
+  if (!force && answeredCount < totalCount) {
+    const unanswered = totalCount - answeredCount;
+    if (!confirm(`You have ${unanswered} unanswered question(s). Are you sure you want to finalize and submit Mock Assessment ${activeMockId}?`)) {
+      return;
+    }
+  }
+
+  clearInterval(mockTimerInterval);
+
+  // Grade Assessment
+  let score = 0;
+  activeMockQuestions.forEach((q, idx) => {
+    if (mockUserAnswers[idx] === q.ans) {
+      score++;
+    }
+  });
+
+  const percentage = Math.round((score / totalCount) * 100);
+  const isPassed = percentage >= 90; // 90% benchmark -> 23 / 25
+  const attempts = parseInt(localStorage.getItem(`mock_${activeMockId}_attempts`) || '0', 10) + 1;
+
+  // Save to localStorage
+  localStorage.setItem(`mock_${activeMockId}_score`, percentage.toString());
+  localStorage.setItem(`mock_${activeMockId}_raw`, score.toString());
+  localStorage.setItem(`mock_${activeMockId}_passed`, isPassed ? 'true' : 'false');
+  localStorage.setItem(`mock_${activeMockId}_attempts`, attempts.toString());
+
+  // Sync to Cloud Firestore if user is authenticated
+  if (currentUser && currentUser.uid && window.db) {
+    try {
+      const updatePayload = {
+        [`mock_${activeMockId}_score`]: percentage,
+        [`mock_${activeMockId}_raw`]: score,
+        [`mock_${activeMockId}_passed`]: isPassed,
+        [`mock_${activeMockId}_attempts`]: attempts,
+        last_updated: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      window.db.collection('learners').doc(currentUser.uid).set(updatePayload, { merge: true });
+      console.log(`Mock ${activeMockId} assessment score synced to Firestore:`, percentage);
+    } catch (err) {
+      console.warn("Firestore mock score sync error:", err);
+    }
+  }
+
+  // Render Result Diagnostic View
+  renderMockResultView(score, totalCount, percentage, isPassed, attempts);
+}
+
+function renderMockResultView(score, total, percentage, isPassed, attempts) {
+  document.getElementById('mockActiveTestContainer')?.classList.add('hidden');
+  const resultContainer = document.getElementById('mockResultContainer');
+  if (resultContainer) resultContainer.classList.remove('hidden');
+
+  const headingEl = document.getElementById('mockResultHeading');
+  const scoreTextEl = document.getElementById('mockResultScoreText');
+  const descEl = document.getElementById('mockResultStatusDesc');
+  const iconBox = document.getElementById('mockResultIconBox');
+  const icon = document.getElementById('mockResultIcon');
+
+  if (scoreTextEl) scoreTextEl.innerText = `${score} / ${total} (${percentage}%)`;
+
+  if (isPassed) {
+    if (headingEl) headingEl.innerText = `🎉 MOCK ${activeMockId} PASSED WITH DISTINCTION!`;
+    if (descEl) descEl.innerText = `Outstanding accomplishment! You scored ${score}/${total} (${percentage}%), meeting the strict 90% benchmark. Your results are permanently recorded in the Administrative Hub.`;
+    if (iconBox) iconBox.className = "w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl";
+    if (icon) icon.className = "fa-solid fa-award";
+    if (window.confetti) {
+      window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+  } else {
+    if (headingEl) headingEl.innerText = `⚠️ MOCK ${activeMockId} COMPLETED — RETRY RECOMMENDED`;
+    if (descEl) descEl.innerText = `You scored ${score}/${total} (${percentage}%). Passing requires at least 90% (23/25). Review the comprehensive rationale below and retake the assessment when ready.`;
+    if (iconBox) iconBox.className = "w-16 h-16 mx-auto rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl";
+    if (icon) icon.className = "fa-solid fa-triangle-exclamation";
+  }
+
+  // Render detailed review
+  const reviewContainer = document.getElementById('mockReviewQuestionsContainer');
+  if (reviewContainer) {
+    const letters = ['A', 'B', 'C', 'D'];
+    reviewContainer.innerHTML = activeMockQuestions.map((q, idx) => {
+      const chosen = mockUserAnswers[idx];
+      const isCorrect = chosen === q.ans;
+      const wasAnswered = chosen !== undefined;
+
+      return `
+        <div class="p-4 rounded-xl border ${
+          isCorrect 
+            ? 'bg-emerald-950/20 border-emerald-500/40' 
+            : 'bg-rose-950/20 border-rose-500/40'
+        } space-y-2.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-mono font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">
+              ${isCorrect ? '<i class="fa-solid fa-circle-check mr-1"></i> Correct' : '<i class="fa-solid fa-circle-xmark mr-1"></i> Incorrect / Review'}
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">Q${idx + 1} • ${escapeHtml(q.topic)}</span>
+          </div>
+          <p class="text-xs font-semibold text-white leading-relaxed">${escapeHtml(q.q)}</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-mono block mb-1">Your Selection:</span>
+              <span class="${isCorrect ? 'text-emerald-300 font-bold' : (wasAnswered ? 'text-rose-300 line-through' : 'text-slate-500 italic')}">
+                ${wasAnswered ? `${letters[chosen]}: ${escapeHtml(q.opts[chosen])}` : 'Not Answered'}
+              </span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30">
+              <span class="text-[10px] text-emerald-400 uppercase font-mono block mb-1">Correct Answer:</span>
+              <span class="text-emerald-200 font-bold">
+                ${letters[q.ans]}: ${escapeHtml(q.opts[q.ans])}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 leading-relaxed">
+            <strong class="text-indigo-400 font-mono text-[10px] uppercase block mb-0.5"><i class="fa-solid fa-lightbulb mr-1"></i> Concept Rationale:</strong>
+            ${escapeHtml(q.exp)}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function exitMockTestToHub() {
+  clearInterval(mockTimerInterval);
+  activeMockId = null;
+  document.getElementById('mockActiveTestContainer')?.classList.add('hidden');
+  document.getElementById('mockResultContainer')?.classList.add('hidden');
+  const hub = document.getElementById('mockSeriesHubView');
+  if (hub) hub.classList.remove('hidden');
+  renderMockSeriesCards();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // 9. Badges & Certificate Generation & UI Synchronization
 function updateCredentialsUI() {
   let allThreePassed = true;
@@ -2238,6 +2661,21 @@ const FIREBASE_AUTH_ROSTER = [
     day3_score: 94,
     day3_passed: true,
     day3_attempts: 1,
+    mock1_score: 96,
+    mock1_passed: true,
+    mock1_attempts: 1,
+    mock2_score: 92,
+    mock2_passed: true,
+    mock2_attempts: 1,
+    mock3_score: 96,
+    mock3_passed: true,
+    mock3_attempts: 1,
+    mock4_score: 100,
+    mock4_passed: true,
+    mock4_attempts: 1,
+    mock5_score: 96,
+    mock5_passed: true,
+    mock5_attempts: 1,
     level0_count: 25,
     spin_prize: '+50 XP Boost',
     last_active: 'Director Lead'
@@ -2322,7 +2760,7 @@ async function loadAdminDashboardData() {
   if (tableBody) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="8" class="p-8 text-center text-slate-400">
+        <td colspan="13" class="p-8 text-center text-slate-400">
           <i class="fa-solid fa-spinner fa-spin mr-2 text-indigo-400"></i> Fetching real-time learner telemetry from Google Cloud Firestore...
         </td>
       </tr>
@@ -2333,7 +2771,24 @@ async function loadAdminDashboardData() {
 
   // 1. Seed with verified Google Firebase Authentication console user roster
   FIREBASE_AUTH_ROSTER.forEach(item => {
-    learnersMap.set(item.email.toLowerCase(), { ...item });
+    learnersMap.set(item.email.toLowerCase(), {
+      mock1_score: item.mock1_score ?? null,
+      mock1_passed: item.mock1_passed ?? false,
+      mock1_attempts: item.mock1_attempts ?? 0,
+      mock2_score: item.mock2_score ?? null,
+      mock2_passed: item.mock2_passed ?? false,
+      mock2_attempts: item.mock2_attempts ?? 0,
+      mock3_score: item.mock3_score ?? null,
+      mock3_passed: item.mock3_passed ?? false,
+      mock3_attempts: item.mock3_attempts ?? 0,
+      mock4_score: item.mock4_score ?? null,
+      mock4_passed: item.mock4_passed ?? false,
+      mock4_attempts: item.mock4_attempts ?? 0,
+      mock5_score: item.mock5_score ?? null,
+      mock5_passed: item.mock5_passed ?? false,
+      mock5_attempts: item.mock5_attempts ?? 0,
+      ...item
+    });
   });
 
   // 2. Fetch all learners from Cloud Firestore and merge live telemetry
@@ -2370,6 +2825,22 @@ async function loadAdminDashboardData() {
           day3_score: d.day_3_score !== undefined ? Number(d.day_3_score) : (existing ? existing.day3_score : null),
           day3_passed: d.day_3_passed !== undefined ? Boolean(d.day_3_passed) : Boolean(existing ? existing.day3_passed : false),
           day3_attempts: Number(d.day_3_attempts || (existing ? existing.day3_attempts : 0)),
+          // 5 Mock Assessments Telemetry
+          mock1_score: d.mock_1_score !== undefined ? Number(d.mock_1_score) : (existing ? existing.mock1_score : null),
+          mock1_passed: d.mock_1_passed !== undefined ? Boolean(d.mock_1_passed) : Boolean(existing ? existing.mock1_passed : false),
+          mock1_attempts: Number(d.mock_1_attempts || (existing ? existing.mock1_attempts : 0)),
+          mock2_score: d.mock_2_score !== undefined ? Number(d.mock_2_score) : (existing ? existing.mock2_score : null),
+          mock2_passed: d.mock_2_passed !== undefined ? Boolean(d.mock_2_passed) : Boolean(existing ? existing.mock2_passed : false),
+          mock2_attempts: Number(d.mock_2_attempts || (existing ? existing.mock2_attempts : 0)),
+          mock3_score: d.mock_3_score !== undefined ? Number(d.mock_3_score) : (existing ? existing.mock3_score : null),
+          mock3_passed: d.mock_3_passed !== undefined ? Boolean(d.mock_3_passed) : Boolean(existing ? existing.mock3_passed : false),
+          mock3_attempts: Number(d.mock_3_attempts || (existing ? existing.mock3_attempts : 0)),
+          mock4_score: d.mock_4_score !== undefined ? Number(d.mock_4_score) : (existing ? existing.mock4_score : null),
+          mock4_passed: d.mock_4_passed !== undefined ? Boolean(d.mock_4_passed) : Boolean(existing ? existing.mock4_passed : false),
+          mock4_attempts: Number(d.mock_4_attempts || (existing ? existing.mock4_attempts : 0)),
+          mock5_score: d.mock_5_score !== undefined ? Number(d.mock_5_score) : (existing ? existing.mock5_score : null),
+          mock5_passed: d.mock_5_passed !== undefined ? Boolean(d.mock_5_passed) : Boolean(existing ? existing.mock5_passed : false),
+          mock5_attempts: Number(d.mock_5_attempts || (existing ? existing.mock5_attempts : 0)),
           level0_count: Number(d.level0_count || (Array.isArray(d.level0_completed) ? d.level0_completed.length : (existing ? existing.level0_count : 0))),
           last_active: d.last_updated ? (d.last_updated.toDate ? d.last_updated.toDate().toLocaleString() : String(d.last_updated)) : (existing ? existing.last_active : 'Recently Active'),
           spin_prize: d.spin_prize || (existing ? existing.spin_prize : 'Claimed')
@@ -2393,15 +2864,14 @@ async function loadAdminDashboardData() {
       uid: currentUser.uid || 'local_user',
       name: currentUser.name || 'Scholar',
       email: currentUser.email,
-      day1_score: null,
-      day1_passed: false,
-      day1_attempts: 0,
-      day2_score: null,
-      day2_passed: false,
-      day2_attempts: 0,
-      day3_score: null,
-      day3_passed: false,
-      day3_attempts: 0,
+      day1_score: null, day1_passed: false, day1_attempts: 0,
+      day2_score: null, day2_passed: false, day2_attempts: 0,
+      day3_score: null, day3_passed: false, day3_attempts: 0,
+      mock1_score: null, mock1_passed: false, mock1_attempts: 0,
+      mock2_score: null, mock2_passed: false, mock2_attempts: 0,
+      mock3_score: null, mock3_passed: false, mock3_attempts: 0,
+      mock4_score: null, mock4_passed: false, mock4_attempts: 0,
+      mock5_score: null, mock5_passed: false, mock5_attempts: 0,
       level0_count: 0,
       spin_prize: 'Pending',
       last_active: 'Active Now'
@@ -2422,6 +2892,16 @@ async function loadAdminDashboardData() {
     existing.day3_passed = existing.day3_passed || d3p;
     if (localStorage.getItem('day_3_score')) existing.day3_score = Number(localStorage.getItem('day_3_score'));
     existing.day3_attempts = Math.max(existing.day3_attempts || 0, Number(localStorage.getItem('day_3_attempts') || 0));
+
+    // Overlay 5 Mock Assessments from local storage
+    for (let m = 1; m <= 5; m++) {
+      const s = localStorage.getItem(`mock_${m}_score`);
+      if (s !== null) {
+        existing[`mock${m}_score`] = Number(s);
+        existing[`mock${m}_passed`] = localStorage.getItem(`mock_${m}_passed`) === 'true';
+        existing[`mock${m}_attempts`] = Number(localStorage.getItem(`mock_${m}_attempts`) || 1);
+      }
+    }
 
     try {
       const savedLvl0 = localStorage.getItem('level0_completed_exercises');
@@ -2562,7 +3042,7 @@ function filterAdminLearnerTable() {
   if (filtered.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="8" class="p-8 text-center text-slate-500">
+        <td colspan="13" class="p-8 text-center text-slate-500">
           No learner records matching filter criteria.
         </td>
       </tr>
@@ -2592,6 +3072,26 @@ function filterAdminLearnerTable() {
       `;
     };
 
+    const renderMockScoreCell = (score, passed, attempts) => {
+      if (score === null || score === undefined) {
+        return `<span class="text-slate-500 font-mono text-[11px]">—</span>`;
+      }
+      const pct = Math.round((score / 25) * 100);
+      const badgeClass = passed 
+        ? "bg-teal-500/15 border-teal-500/30 text-teal-300" 
+        : "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return `
+        <div class="inline-flex flex-col items-center">
+          <span class="px-2 py-0.5 rounded border ${badgeClass} font-mono font-bold text-[11px]">
+            ${score}/25 (${pct}%)
+          </span>
+          <span class="text-[9px] ${passed ? 'text-teal-400' : 'text-slate-500'} mt-0.5 font-mono">
+            ${passed ? 'PASS' : 'RETRY'} • Att: ${attempts || 1}
+          </span>
+        </div>
+      `;
+    };
+
     return `
       <tr class="hover:bg-slate-800/40 transition">
         <td class="p-3">
@@ -2608,6 +3108,11 @@ function filterAdminLearnerTable() {
         <td class="p-3 text-center">${renderScoreCell(lrn.day1_score, lrn.day1_passed, lrn.day1_attempts)}</td>
         <td class="p-3 text-center">${renderScoreCell(lrn.day2_score, lrn.day2_passed, lrn.day2_attempts)}</td>
         <td class="p-3 text-center">${renderScoreCell(lrn.day3_score, lrn.day3_passed, lrn.day3_attempts)}</td>
+        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock1_score, lrn.mock1_passed, lrn.mock1_attempts)}</td>
+        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock2_score, lrn.mock2_passed, lrn.mock2_attempts)}</td>
+        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock3_score, lrn.mock3_passed, lrn.mock3_attempts)}</td>
+        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock4_score, lrn.mock4_passed, lrn.mock4_attempts)}</td>
+        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock5_score, lrn.mock5_passed, lrn.mock5_attempts)}</td>
         <td class="p-3 text-center">
           <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-950 border border-slate-700 text-amber-300 font-mono text-[10px]">
             <i class="fa-solid fa-microchip text-[9px]"></i> ${lvl0}/25 Done
@@ -2684,6 +3189,88 @@ function downloadDayReport(dayNum) {
   exportToCSV(headers, rows, `Kapil_Bootcamp_Day${dayNum}_Performance_Report_${dateStr}.csv`);
 }
 
+function downloadMockAssessmentsReport() {
+  if (adminLearnersData.length === 0) {
+    alert("No learner records available to export. Syncing live data now...");
+    loadAdminDashboardData();
+    return;
+  }
+
+  const dateStr = new Date().toISOString().split('T')[0];
+  const headers = [
+    "Learner ID",
+    "Scholar Name",
+    "Google Email",
+    "Mock 1 Score (out of 25)",
+    "Mock 1 Percentage",
+    "Mock 1 Status (≥90%)",
+    "Mock 1 Attempts",
+    "Mock 2 Score (out of 25)",
+    "Mock 2 Percentage",
+    "Mock 2 Status (≥90%)",
+    "Mock 2 Attempts",
+    "Mock 3 Score (out of 25)",
+    "Mock 3 Percentage",
+    "Mock 3 Status (≥90%)",
+    "Mock 3 Attempts",
+    "Mock 4 Score (out of 25)",
+    "Mock 4 Percentage",
+    "Mock 4 Status (≥90%)",
+    "Mock 4 Attempts",
+    "Mock 5 Score (out of 25)",
+    "Mock 5 Percentage",
+    "Mock 5 Status (≥90%)",
+    "Mock 5 Attempts",
+    "Series Average Percentage",
+    "Mocks Passed (out of 5)",
+    "Last Active Timestamp"
+  ];
+
+  const rows = adminLearnersData.map(lrn => {
+    let mockScores = [];
+    let passedCount = 0;
+    for (let m = 1; m <= 5; m++) {
+      const score = lrn[`mock${m}_score`];
+      if (score !== null && score !== undefined) {
+        mockScores.push((score / 25) * 100);
+      }
+      if (lrn[`mock${m}_passed`]) passedCount++;
+    }
+
+    const seriesAvg = mockScores.length > 0 
+      ? (mockScores.reduce((a, b) => a + b, 0) / mockScores.length).toFixed(1) + "%" 
+      : "N/A";
+
+    const formatMock = (m) => {
+      const s = lrn[`mock${m}_score`];
+      const p = Boolean(lrn[`mock${m}_passed`]);
+      const att = lrn[`mock${m}_attempts`] || 0;
+      if (s === null || s === undefined) {
+        return ["N/A", "N/A", "NOT_ATTEMPTED", att];
+      }
+      const pct = Math.round((s / 25) * 100) + "%";
+      const status = p ? "PASSED (>=90%)" : "FAILED (<90%)";
+      return [s, pct, status, att];
+    };
+
+    return [
+      lrn.uid,
+      lrn.name,
+      lrn.email,
+      ...formatMock(1),
+      ...formatMock(2),
+      ...formatMock(3),
+      ...formatMock(4),
+      ...formatMock(5),
+      seriesAvg,
+      `${passedCount}/5`,
+      lrn.last_active || "N/A"
+    ];
+  });
+
+  exportToCSV(headers, rows, `Kapil_Bootcamp_5_Mock_Assessments_Report_${dateStr}.csv`);
+}
+
 function downloadConsolidatedReport() {
   if (adminLearnersData.length === 0) {
     alert("No learner records available to export. Syncing live data now...");
@@ -2705,7 +3292,18 @@ function downloadConsolidatedReport() {
     "Day 3 Score",
     "Day 3 Passed",
     "Day 3 Attempts",
-    "Average Score (%)",
+    "Day Exam Avg (%)",
+    "Mock 1 Score (of 25)",
+    "Mock 1 Passed",
+    "Mock 2 Score (of 25)",
+    "Mock 2 Passed",
+    "Mock 3 Score (of 25)",
+    "Mock 3 Passed",
+    "Mock 4 Score (of 25)",
+    "Mock 4 Passed",
+    "Mock 5 Score (of 25)",
+    "Mock 5 Passed",
+    "Mock Series Avg (%)",
     "Level 0 Lab Completed (of 25)",
     "Day 1 Badge Earned",
     "Day 2 Badge Earned",
@@ -2716,27 +3314,45 @@ function downloadConsolidatedReport() {
 
   const rows = adminLearnersData.map(lrn => {
     const scores = [];
-    if (lrn.day1_score !== null) scores.push(lrn.day1_score);
-    if (lrn.day2_score !== null) scores.push(lrn.day2_score);
-    if (lrn.day3_score !== null) scores.push(lrn.day3_score);
+    if (lrn.day1_score !== null && lrn.day1_score !== undefined) scores.push(lrn.day1_score);
+    if (lrn.day2_score !== null && lrn.day2_score !== undefined) scores.push(lrn.day2_score);
+    if (lrn.day3_score !== null && lrn.day3_score !== undefined) scores.push(lrn.day3_score);
 
     const avg = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) + "%" : "N/A";
     const certified = Boolean(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
+
+    const mockScores = [];
+    for (let m = 1; m <= 5; m++) {
+      const s = lrn[`mock${m}_score`];
+      if (s !== null && s !== undefined) mockScores.push((s / 25) * 100);
+    }
+    const mockAvg = mockScores.length > 0 ? (mockScores.reduce((a, b) => a + b, 0) / mockScores.length).toFixed(1) + "%" : "N/A";
+
+    const formatMockVal = (m) => [
+      lrn[`mock${m}_score`] !== null && lrn[`mock${m}_score`] !== undefined ? `${lrn[`mock${m}_score`]}/25` : "N/A",
+      lrn[`mock${m}_passed`] ? "YES" : (lrn[`mock${m}_score`] !== null && lrn[`mock${m}_score`] !== undefined ? "NO" : "NOT_ATTEMPTED")
+    ];
 
     return [
       lrn.uid,
       lrn.name,
       lrn.email,
-      lrn.day1_score !== null ? lrn.day1_score : "N/A",
+      lrn.day1_score !== null && lrn.day1_score !== undefined ? lrn.day1_score : "N/A",
       lrn.day1_passed ? "YES" : "NO",
       lrn.day1_attempts || 0,
-      lrn.day2_score !== null ? lrn.day2_score : "N/A",
+      lrn.day2_score !== null && lrn.day2_score !== undefined ? lrn.day2_score : "N/A",
       lrn.day2_passed ? "YES" : "NO",
       lrn.day2_attempts || 0,
-      lrn.day3_score !== null ? lrn.day3_score : "N/A",
+      lrn.day3_score !== null && lrn.day3_score !== undefined ? lrn.day3_score : "N/A",
       lrn.day3_passed ? "YES" : "NO",
       lrn.day3_attempts || 0,
       avg,
+      ...formatMockVal(1),
+      ...formatMockVal(2),
+      ...formatMockVal(3),
+      ...formatMockVal(4),
+      ...formatMockVal(5),
+      mockAvg,
       `${lrn.level0_count || 0}/25`,
       lrn.day1_passed ? "EARNED" : "LOCKED",
       lrn.day2_passed ? "EARNED" : "LOCKED",

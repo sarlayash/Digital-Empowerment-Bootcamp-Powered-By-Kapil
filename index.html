@@ -301,6 +301,7 @@
   <div id="mobileBottomNav" class="hidden md:hidden flex border-b border-slate-800 bg-slate-900 px-2 py-1.5 overflow-x-auto text-[11px] gap-2">
     <button onclick="switchTab('notes')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Notes</button>
     <button onclick="switchTab('level0')" class="px-2.5 py-1 rounded bg-slate-800 text-amber-300 font-bold whitespace-nowrap"><i class="fa-solid fa-microchip mr-1"></i>Level 0 (25 Ex)</button>
+    <button onclick="switchTab('mocktests')" class="px-2.5 py-1 rounded bg-slate-800 text-teal-300 font-bold whitespace-nowrap"><i class="fa-solid fa-graduation-cap mr-1"></i>5 Mocks (25 Qs)</button>
     <button onclick="switchTab('pretest')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Pre-Test</button>
     <button onclick="switchTab('ide')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Cloud IDE</button>
     <button onclick="switchTab('assessment')" class="px-2.5 py-1 rounded bg-indigo-600 text-white font-bold whitespace-nowrap">100 Qs Mock</button>
@@ -394,6 +395,9 @@
         </button>
         <button onclick="switchTab('level0')" id="tabBtnLevel0" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-microchip text-amber-400"></i> Level 0 Lab (25 Ex)
+        </button>
+        <button onclick="switchTab('mocktests')" id="tabBtnMocktests" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-graduation-cap text-teal-400"></i> 5 Mocks (25 Qs Each)
         </button>
         <button onclick="switchTab('pretest')" id="tabBtnPretest" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-list-check"></i> Diagnostic Pre-Test
@@ -705,6 +709,133 @@
 
       </div>
 
+      <!-- TAB: 5 MOCK ASSESSMENTS (25 MCQs EACH) -->
+      <div id="tabContentMocktests" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-6">
+        
+        <!-- Mock Series Overview / Hub View -->
+        <div id="mockSeriesHubView" class="space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-bold">5-Stage Assessment Series</span>
+                <span class="text-xs text-slate-400 font-mono">25 MCQs Each • Zero Repeats</span>
+              </div>
+              <h2 class="text-base md:text-xl font-extrabold text-white mt-1">Kapil Digital Empowerment 5 Mock Series</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Test your mastery across 5 distinct domains. Strict 90% benchmark (23/25). Real-time telemetry synced to Admin Hub.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <p class="text-[10px] text-slate-400 uppercase font-mono">Series Progress</p>
+                <p id="mockSeriesSummaryScore" class="text-sm font-black text-teal-400 font-mono">0 / 5 Completed</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Overall Series Metric Banner -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+              <p class="text-[10px] text-slate-400 uppercase font-mono">Total MCQs</p>
+              <p class="text-lg font-black text-white font-mono">125</p>
+              <p class="text-[9px] text-teal-400">100% Unique Questions</p>
+            </div>
+            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+              <p class="text-[10px] text-slate-400 uppercase font-mono">Passing Threshold</p>
+              <p class="text-lg font-black text-amber-400 font-mono">≥ 90%</p>
+              <p class="text-[9px] text-slate-400">23 of 25 to Pass</p>
+            </div>
+            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+              <p class="text-[10px] text-slate-400 uppercase font-mono">Series Average</p>
+              <p id="mockSeriesAvgDisplay" class="text-lg font-black text-indigo-400 font-mono">0%</p>
+              <p class="text-[9px] text-slate-400">Across All 5 Mocks</p>
+            </div>
+            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+              <p class="text-[10px] text-slate-400 uppercase font-mono">Mocks Passed</p>
+              <p id="mockSeriesPassedCount" class="text-lg font-black text-emerald-400 font-mono">0 / 5</p>
+              <p class="text-[9px] text-slate-400">Honors Milestone</p>
+            </div>
+          </div>
+
+          <!-- 5 Mock Cards Grid -->
+          <div id="mockCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamically populated by renderMockSeriesCards() in app.js -->
+          </div>
+        </div>
+
+        <!-- Active Mock Test Exam Container (Initially hidden) -->
+        <div id="mockActiveTestContainer" class="hidden space-y-5">
+          <!-- Active Exam Header -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="activeMockBadge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">MOCK 1</span>
+                <span class="text-xs text-slate-400 font-mono">25 Questions • Single Best Choice</span>
+              </div>
+              <h3 id="activeMockTitle" class="text-base font-extrabold text-white mt-1">Mock Assessment</h3>
+            </div>
+            <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 uppercase font-mono">Time Remaining</span>
+                <div id="mockTimerDisplay" class="text-xl font-mono font-black text-rose-400">25:00</div>
+              </div>
+              <button onclick="exitMockTestToHub()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-xl border border-slate-700 transition font-bold">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Exit
+              </button>
+            </div>
+          </div>
+
+          <!-- Question Palette Navigation -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px]">Question Navigator</span>
+              <span id="mockAnsweredCountLabel" class="text-teal-400 font-mono font-bold text-[11px]">0 / 25 Answered</span>
+            </div>
+            <div id="mockPaletteGrid" class="flex flex-wrap gap-1.5 p-1 bg-slate-900 rounded-lg border border-slate-800"></div>
+          </div>
+
+          <!-- Questions List -->
+          <div id="mockQuestionsListContainer" class="space-y-4"></div>
+
+          <!-- Bottom Submission Bar -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
+            <div class="text-xs text-slate-400">
+              <i class="fa-solid fa-circle-info text-sky-400 mr-1"></i> Passing benchmark: <strong>≥ 90% (23/25)</strong>. Results and telemetry are recorded instantly.
+            </div>
+            <button onclick="submitActiveMockTest()" id="btnSubmitMockTest" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-check-double"></i> Submit Mock Assessment
+            </button>
+          </div>
+        </div>
+
+        <!-- Mock Result & Review Container (Initially hidden) -->
+        <div id="mockResultContainer" class="hidden space-y-6">
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+            <div id="mockResultIconBox" class="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl">
+              <i id="mockResultIcon" class="fa-solid fa-award"></i>
+            </div>
+            <h3 id="mockResultHeading" class="text-xl font-black text-white">MOCK ASSESSMENT COMPLETE</h3>
+            <div id="mockResultScoreText" class="text-3xl font-mono font-black text-emerald-400">24 / 25 (96%)</div>
+            <p id="mockResultStatusDesc" class="text-xs text-slate-300 max-w-lg mx-auto leading-relaxed"></p>
+            <div class="flex items-center justify-center gap-3 pt-2">
+              <button onclick="exitMockTestToHub()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition">
+                <i class="fa-solid fa-grip mr-1.5"></i> Return to 5 Mocks Hub
+              </button>
+            </div>
+          </div>
+
+          <!-- Question-by-Question Review Section -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 md:p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-clipboard-check text-indigo-400"></i> Comprehensive Question & Explanation Review
+              </h4>
+              <span class="text-xs text-slate-400 font-mono">25 Detailed Explanations</span>
+            </div>
+            <div id="mockReviewQuestionsContainer" class="space-y-4"></div>
+          </div>
+        </div>
+
+      </div>
+
       <!-- TAB 5: BADGES & CERTIFICATES -->
       <div id="tabContentCredentials" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
@@ -873,7 +1004,7 @@
         <span class="text-[11px] text-slate-400 font-mono">Real-Time Data Feeds</span>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <!-- Download Day 1 CSV -->
         <button onclick="downloadDayReport(1)" class="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/60 rounded-xl transition text-left group">
           <div class="flex items-center justify-between mb-1">
@@ -904,14 +1035,24 @@
           <p class="text-[10px] text-slate-500 mt-1 font-mono">Scores, Retries, Cooldowns • CSV</p>
         </button>
 
+        <!-- Download 5 Mocks CSV -->
+        <button onclick="downloadMockAssessmentsReport()" class="p-3 bg-gradient-to-r from-teal-950/60 to-slate-900 hover:from-teal-900/70 border border-teal-500/60 rounded-xl transition text-left group shadow-lg">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-extrabold text-teal-300 group-hover:text-teal-200 transition">5 Mocks Report</span>
+            <i class="fa-solid fa-graduation-cap text-xs text-teal-400 group-hover:scale-110 transition"></i>
+          </div>
+          <p class="text-[11px] text-teal-100 font-semibold">5 Mock Series (125 Qs)</p>
+          <p class="text-[10px] text-teal-400/80 mt-1 font-mono">All 5 Mock Scores & % • CSV</p>
+        </button>
+
         <!-- Download Consolidated Master CSV -->
         <button onclick="downloadConsolidatedReport()" class="p-3 bg-gradient-to-r from-emerald-950/50 to-slate-900 hover:from-emerald-900/60 border border-emerald-500/60 rounded-xl transition text-left group shadow-lg">
           <div class="flex items-center justify-between mb-1">
             <span class="text-xs font-extrabold text-emerald-300 group-hover:text-emerald-200 transition">Consolidated Master</span>
             <i class="fa-solid fa-file-excel text-xs text-emerald-400 group-hover:scale-110 transition"></i>
           </div>
-          <p class="text-[11px] text-emerald-100 font-semibold">Complete 3-Day Performance</p>
-          <p class="text-[10px] text-emerald-400/80 mt-1 font-mono">All Badges, Certs & Telemetry • CSV</p>
+          <p class="text-[11px] text-emerald-100 font-semibold">Complete 3-Day & 5-Mock Hub</p>
+          <p class="text-[10px] text-emerald-400/80 mt-1 font-mono">Master Performance Matrix • CSV</p>
         </button>
       </div>
     </div>
@@ -1026,9 +1167,14 @@
           <thead class="bg-slate-950/80 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
             <tr>
               <th class="p-3">Scholar</th>
-              <th class="p-3 text-center">Day 1 Score</th>
-              <th class="p-3 text-center">Day 2 Score</th>
-              <th class="p-3 text-center">Day 3 Score</th>
+              <th class="p-3 text-center">Day 1 (100Q)</th>
+              <th class="p-3 text-center">Day 2 (100Q)</th>
+              <th class="p-3 text-center">Day 3 (100Q)</th>
+              <th class="p-3 text-center text-teal-300">Mock 1 (25Q)</th>
+              <th class="p-3 text-center text-teal-300">Mock 2 (25Q)</th>
+              <th class="p-3 text-center text-teal-300">Mock 3 (25Q)</th>
+              <th class="p-3 text-center text-teal-300">Mock 4 (25Q)</th>
+              <th class="p-3 text-center text-teal-300">Mock 5 (25Q)</th>
               <th class="p-3 text-center">Level 0 Lab</th>
               <th class="p-3 text-center">Daily Spin</th>
               <th class="p-3 text-center">Milestone Status</th>
@@ -1037,7 +1183,7 @@
           </thead>
           <tbody id="adminLearnerTableBody" class="divide-y divide-slate-800">
             <tr>
-              <td colspan="8" class="p-6 text-center text-slate-500">
+              <td colspan="13" class="p-6 text-center text-slate-500">
                 <i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading real-time learner records...
               </td>
             </tr>
@@ -1077,6 +1223,7 @@
 
   <!-- Application Logic Scripts -->
   <script src="./js/questions-data.js"></script>
+  <script src="./js/mock-assessments-data.js"></script>
   <script src="./js/notes-data.js"></script>
   <script src="./js/level0-exercises.js"></script>
   <script src="./js/ide-engine.js"></script>
