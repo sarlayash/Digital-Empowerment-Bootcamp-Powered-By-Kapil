@@ -840,7 +840,13 @@
             <h2 class="text-base md:text-lg font-black text-white">Kapil Bootcamp Administrative Hub</h2>
             <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono font-bold">SUPERADMIN</span>
           </div>
-          <p class="text-xs text-slate-400">Real-time scholar telemetry, exam diagnostics & CSV report generation</p>
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            <div id="adminSyncStatusBadge" class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-[10px]">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Live 5-Min Sync: <span id="adminSyncCountdownText">05:00</span></span>
+            </div>
+            <p id="adminLastSyncedLabel" class="text-xs text-slate-400">Live Firebase Synchronization Active • Auto-refreshes every 5 mins</p>
+          </div>
         </div>
       </div>
 
