@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTimeGateMonitor();
   initSpinningWheel();
   setupIde();
+  initLevel0Lab();
   selectDay(1);
   updateAppScreenState();
 });
@@ -254,6 +255,12 @@ async function loadLearnerProgressFromFirestore(uid) {
       if (data.day_1_passed) localStorage.setItem('day_1_passed', 'true');
       if (data.day_2_passed) localStorage.setItem('day_2_passed', 'true');
       if (data.day_3_passed) localStorage.setItem('day_3_passed', 'true');
+      if (data.level0_completed && Array.isArray(data.level0_completed)) {
+        completedLevel0Ids = new Set(data.level0_completed);
+        localStorage.setItem('level0_completed_exercises', JSON.stringify(data.level0_completed));
+        updateLevel0ProgressUI();
+        renderLevel0ExerciseList();
+      }
       updateTimeGateStatus();
     }
   } catch (e) {
@@ -402,7 +409,7 @@ function selectDay(dayNum) {
 
 function switchTab(tabId) {
   currentTab = tabId;
-  const tabs = ['notes', 'pretest', 'ide', 'assessment', 'credentials'];
+  const tabs = ['notes', 'level0', 'pretest', 'ide', 'assessment', 'credentials'];
 
   tabs.forEach(t => {
     const content = document.getElementById('tabContent' + capitalize(t));
@@ -423,6 +430,8 @@ function switchTab(tabId) {
 
   if (tabId === 'ide') {
     loadIdeLanguageTemplate();
+  } else if (tabId === 'level0') {
+    renderCurrentLevel0Exercise();
   }
 }
 
@@ -555,6 +564,254 @@ function runIdeCode() {
       terminal.innerText = IDE_ENGINE.runCode(lang, code);
     }
   }, 350);
+}
+
+// ========================================================
+// 6B. LEVEL 0 FOUNDATION LAB (25 EXERCISES CONTROLLER)
+// ========================================================
+let currentLevel0Id = 1;
+let completedLevel0Ids = new Set();
+
+function initLevel0Lab() {
+  loadSavedLevel0Progress();
+  renderLevel0ExerciseList();
+  renderCurrentLevel0Exercise();
+}
+
+function loadSavedLevel0Progress() {
+  try {
+    const saved = localStorage.getItem('level0_completed_exercises');
+    if (saved) {
+      const arr = JSON.parse(saved);
+      if (Array.isArray(arr)) {
+        completedLevel0Ids = new Set(arr);
+      }
+    }
+  } catch (e) {
+    console.error("Error reading saved Level 0 progress:", e);
+  }
+}
+
+function saveLevel0Progress() {
+  const arr = Array.from(completedLevel0Ids);
+  localStorage.setItem('level0_completed_exercises', JSON.stringify(arr));
+  updateLevel0ProgressUI();
+
+  // Sync to Cloud Firestore if logged in
+  if (currentUser && currentUser.uid && window.db) {
+    try {
+      window.db.collection('learners').doc(currentUser.uid).set({
+        level0_completed: arr,
+        level0_count: arr.length,
+        last_updated: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      console.warn("Firestore Level 0 sync note:", e);
+    }
+  }
+}
+
+function updateLevel0ProgressUI() {
+  const total = (typeof LEVEL0_EXERCISES !== 'undefined') ? LEVEL0_EXERCISES.length : 25;
+  const count = completedLevel0Ids.size;
+  const pct = Math.round((count / total) * 100);
+
+  const countEl = document.getElementById('level0ProgressCount');
+  const barEl = document.getElementById('level0ProgressBar');
+  if (countEl) countEl.innerText = `${count} / ${total} Done (${pct}%)`;
+  if (barEl) barEl.style.width = `${pct}%`;
+}
+
+function renderLevel0ExerciseList() {
+  const container = document.getElementById('level0ExerciseList');
+  if (!container || typeof LEVEL0_EXERCISES === 'undefined') return;
+
+  container.innerHTML = '';
+  LEVEL0_EXERCISES.forEach(ex => {
+    const isDone = completedLevel0Ids.has(ex.id);
+    const isActive = ex.id === currentLevel0Id;
+
+    const item = document.createElement('div');
+    item.className = `p-2.5 rounded-xl cursor-pointer border transition text-xs flex items-center justify-between ${
+      isActive 
+        ? 'bg-amber-500/15 border-amber-500/60 text-white font-bold shadow' 
+        : 'bg-slate-900/60 border-slate-800/80 text-slate-300 hover:border-slate-700 hover:bg-slate-900'
+    }`;
+    item.onclick = () => selectLevel0Exercise(ex.id);
+
+    item.innerHTML = `
+      <div class="flex items-center space-x-2.5 truncate">
+        <span class="w-5 h-5 rounded-md flex items-center justify-center font-mono text-[10px] ${
+          isDone ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+        }">${ex.id}</span>
+        <div class="truncate">
+          <p class="truncate text-xs ${isActive ? 'text-amber-300' : 'text-slate-200'}">${ex.title.replace(/^Exercise \d+:\s*/, '')}</p>
+          <p class="text-[10px] text-slate-500 truncate font-mono">${ex.category}</p>
+        </div>
+      </div>
+      <div>
+        ${isDone ? '<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>' : '<i class="fa-regular fa-circle text-slate-600 text-xs"></i>'}
+      </div>
+    `;
+    container.appendChild(item);
+  });
+
+  updateLevel0ProgressUI();
+}
+
+function selectLevel0Exercise(id) {
+  currentLevel0Id = id;
+  renderLevel0ExerciseList();
+  renderCurrentLevel0Exercise();
+}
+
+function renderCurrentLevel0Exercise() {
+  if (typeof LEVEL0_EXERCISES === 'undefined') return;
+  const ex = LEVEL0_EXERCISES.find(e => e.id === currentLevel0Id) || LEVEL0_EXERCISES[0];
+  if (!ex) return;
+
+  const titleEl = document.getElementById('level0ActiveTitle');
+  const catEl = document.getElementById('level0CategoryBadge');
+  const descEl = document.getElementById('level0ActiveDesc');
+  const inputsContainer = document.getElementById('level0InputsContainer');
+  const snippetBox = document.getElementById('level0CodeSnippetBox');
+  const toggleBtn = document.getElementById('level0CompleteToggleBtn');
+
+  if (titleEl) titleEl.innerText = ex.title;
+  if (catEl) catEl.innerText = ex.category;
+  if (descEl) descEl.innerText = ex.desc;
+  if (snippetBox) snippetBox.innerText = ex.codeSnippet || "// No code snippet provided.";
+
+  const isDone = completedLevel0Ids.has(ex.id);
+  if (toggleBtn) {
+    if (isDone) {
+      toggleBtn.className = "text-xs px-3 py-1 rounded-lg border transition font-bold flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30";
+      toggleBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span id="level0CompleteToggleText">Completed!</span>';
+    } else {
+      toggleBtn.className = "text-xs px-3 py-1 rounded-lg border transition font-bold flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:text-white border-slate-700";
+      toggleBtn.innerHTML = '<i class="fa-regular fa-circle-check"></i> <span id="level0CompleteToggleText">Mark Complete</span>';
+    }
+  }
+
+  // Populate dynamic inputs
+  if (inputsContainer) {
+    inputsContainer.innerHTML = '';
+    (ex.inputs || []).forEach(inp => {
+      const wrapper = document.createElement('div');
+      wrapper.className = "space-y-1";
+
+      const label = document.createElement('label');
+      label.className = "block text-xs font-mono text-slate-400";
+      label.innerText = inp.label;
+      wrapper.appendChild(label);
+
+      if (inp.type === 'select') {
+        const select = document.createElement('select');
+        select.id = `lvl0_inp_${inp.id}`;
+        select.className = "w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-xl p-2.5 focus:outline-none focus:border-amber-500 font-mono";
+        (inp.options || []).forEach(opt => {
+          const optEl = document.createElement('option');
+          optEl.value = opt;
+          optEl.innerText = opt;
+          if (opt === inp.default) optEl.selected = true;
+          select.appendChild(optEl);
+        });
+        select.onchange = () => runCurrentLevel0Exercise();
+        wrapper.appendChild(select);
+      } else {
+        const input = document.createElement('input');
+        input.id = `lvl0_inp_${inp.id}`;
+        input.type = inp.type || 'text';
+        input.value = inp.default !== undefined ? inp.default : '';
+        input.className = "w-full bg-slate-900 border border-slate-700 text-xs text-amber-300 rounded-xl p-2.5 focus:outline-none focus:border-amber-500 font-mono";
+        input.oninput = () => runCurrentLevel0Exercise();
+        wrapper.appendChild(input);
+      }
+
+      inputsContainer.appendChild(wrapper);
+    });
+  }
+
+  // Auto-run on load
+  runCurrentLevel0Exercise();
+}
+
+function runCurrentLevel0Exercise() {
+  if (typeof LEVEL0_EXERCISES === 'undefined') return;
+  const ex = LEVEL0_EXERCISES.find(e => e.id === currentLevel0Id);
+  if (!ex) return;
+
+  const vals = {};
+  (ex.inputs || []).forEach(inp => {
+    const el = document.getElementById(`lvl0_inp_${inp.id}`);
+    if (el) {
+      vals[inp.id] = el.value;
+    }
+  });
+
+  const outEl = document.getElementById('level0OutputBox');
+  if (outEl) {
+    try {
+      const renderedHtml = ex.run(vals);
+      outEl.innerHTML = renderedHtml;
+    } catch (err) {
+      outEl.innerHTML = `<div class="p-3 bg-rose-950/40 border border-rose-900 rounded-xl text-rose-300 text-xs">Error executing exercise: ${err.message}</div>`;
+    }
+  }
+}
+
+function toggleCurrentLevel0Complete() {
+  if (completedLevel0Ids.has(currentLevel0Id)) {
+    completedLevel0Ids.delete(currentLevel0Id);
+  } else {
+    completedLevel0Ids.add(currentLevel0Id);
+  }
+  saveLevel0Progress();
+  renderLevel0ExerciseList();
+  renderCurrentLevel0Exercise();
+}
+
+function copyLevel0Snippet() {
+  const snippetBox = document.getElementById('level0CodeSnippetBox');
+  if (!snippetBox) return;
+  navigator.clipboard.writeText(snippetBox.innerText).then(() => {
+    alert("Code snippet copied to clipboard!");
+  }).catch(() => {
+    alert("Copied!");
+  });
+}
+
+function sendLevel0ToCloudIde() {
+  if (typeof LEVEL0_EXERCISES === 'undefined') return;
+  const ex = LEVEL0_EXERCISES.find(e => e.id === currentLevel0Id);
+  if (!ex || !ex.codeSnippet) {
+    alert("No code snippet available for this exercise.");
+    return;
+  }
+
+  const editor = document.getElementById('codeEditorInput');
+  const selector = document.getElementById('ideLanguageSelector');
+
+  // Detect language
+  let lang = 'c';
+  if (ex.codeSnippet.includes('CREATE TABLE') || ex.codeSnippet.includes('SELECT ')) {
+    lang = 'sql';
+  } else if (ex.codeSnippet.includes('<!--') || ex.codeSnippet.includes('<!DOCTYPE') || ex.codeSnippet.includes('<p>')) {
+    lang = 'web';
+  } else if (ex.codeSnippet.includes('#include <stdio.h>') || ex.codeSnippet.includes('int main')) {
+    lang = 'c';
+  }
+
+  if (selector) selector.value = lang;
+  if (editor) editor.value = ex.codeSnippet;
+
+  // Switch to IDE tab
+  switchTab('ide');
+
+  const terminal = document.getElementById('codeTerminalOutput');
+  if (terminal) {
+    terminal.innerText = `// Loaded from Level 0 ${ex.title}\n// Ready to compile and execute! Click 'Run / Compile Code' above.\n`;
+  }
 }
 
 // 7. Spinning Wheel Game

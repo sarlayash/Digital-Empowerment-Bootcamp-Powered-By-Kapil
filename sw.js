@@ -1,5 +1,5 @@
 // Service Worker for Kapil's Digital Empowerment Bootcamp PWA
-const CACHE_NAME = 'kapil-bootcamp-cache-v1';
+const CACHE_NAME = 'kapil-bootcamp-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
   './images/kapil_founder.jpg',
   './js/questions-data.js',
   './js/notes-data.js',
+  './js/level0-exercises.js',
   './js/ide-engine.js',
   './js/firebase-init.js',
   './js/app.js'

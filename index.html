@@ -246,11 +246,12 @@
 
   <!-- Mobile Bottom Quick Navigation -->
   <div id="mobileBottomNav" class="hidden md:hidden flex border-b border-slate-800 bg-slate-900 px-2 py-1.5 overflow-x-auto text-[11px] gap-2">
-    <button onclick="switchTab('notes')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Notes</button>
-    <button onclick="switchTab('pretest')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Pre-Test</button>
-    <button onclick="switchTab('ide')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Cloud IDE</button>
-    <button onclick="switchTab('assessment')" class="px-2.5 py-1 rounded bg-indigo-600 text-white font-bold">100 Qs Mock</button>
-    <button onclick="switchTab('credentials')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200">Badges</button>
+    <button onclick="switchTab('notes')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Notes</button>
+    <button onclick="switchTab('level0')" class="px-2.5 py-1 rounded bg-slate-800 text-amber-300 font-bold whitespace-nowrap"><i class="fa-solid fa-microchip mr-1"></i>Level 0 (25 Ex)</button>
+    <button onclick="switchTab('pretest')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Pre-Test</button>
+    <button onclick="switchTab('ide')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Cloud IDE</button>
+    <button onclick="switchTab('assessment')" class="px-2.5 py-1 rounded bg-indigo-600 text-white font-bold whitespace-nowrap">100 Qs Mock</button>
+    <button onclick="switchTab('credentials')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Badges</button>
   </div>
 
   <!-- ======================================================== -->
@@ -334,20 +335,23 @@
     <div class="lg:col-span-8 space-y-4">
 
       <!-- Desktop Tabs Header -->
-      <div class="hidden md:flex border-b border-slate-800 bg-slate-900/60 rounded-t-2xl px-3 pt-2 gap-2 text-xs font-medium">
-        <button onclick="switchTab('notes')" id="tabBtnNotes" class="px-4 py-2.5 border-b-2 border-indigo-500 text-indigo-400 font-bold flex items-center gap-1.5">
+      <div class="hidden md:flex border-b border-slate-800 bg-slate-900/60 rounded-t-2xl px-3 pt-2 gap-2 text-xs font-medium overflow-x-auto">
+        <button onclick="switchTab('notes')" id="tabBtnNotes" class="px-3 md:px-4 py-2.5 border-b-2 border-indigo-500 text-indigo-400 font-bold flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-book-open"></i> Zero-Assumption Notes
         </button>
-        <button onclick="switchTab('pretest')" id="tabBtnPretest" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+        <button onclick="switchTab('level0')" id="tabBtnLevel0" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-microchip text-amber-400"></i> Level 0 Lab (25 Ex)
+        </button>
+        <button onclick="switchTab('pretest')" id="tabBtnPretest" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-list-check"></i> Diagnostic Pre-Test
         </button>
-        <button onclick="switchTab('ide')" id="tabBtnIde" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+        <button onclick="switchTab('ide')" id="tabBtnIde" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-code"></i> Cloud IDE (Zero-Install)
         </button>
-        <button onclick="switchTab('assessment')" id="tabBtnAssessment" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+        <button onclick="switchTab('assessment')" id="tabBtnAssessment" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-stopwatch"></i> 100 Qs Mock (60 Min)
         </button>
-        <button onclick="switchTab('credentials')" id="tabBtnCredentials" class="px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5">
+        <button onclick="switchTab('credentials')" id="tabBtnCredentials" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-medal"></i> Badges & Certs
         </button>
       </div>
@@ -367,6 +371,107 @@
         <div id="notesBody" class="space-y-4">
           <!-- Dynamic Content Injected via notes-data.js -->
         </div>
+      </div>
+
+      <!-- TAB: LEVEL 0 COMPUTATIONAL FOUNDATION LAB (25 EXERCISES) -->
+      <div id="tabContentLevel0" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-6">
+        
+        <!-- Header & Progress -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Level 0 Foundation</span>
+              <span class="text-xs text-slate-400 font-mono">Zero Assumptions • Hands-on</span>
+            </div>
+            <h2 class="text-base md:text-xl font-extrabold text-white mt-1">25 Hands-on Computational & Binary Exercises</h2>
+          </div>
+          
+          <!-- Progress Tracker -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 min-w-[200px]">
+            <div class="flex items-center justify-between text-xs font-mono mb-1.5">
+              <span class="text-slate-400">Progress:</span>
+              <span id="level0ProgressCount" class="font-bold text-amber-300">0 / 25 Done</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div id="level0ProgressBar" class="bg-gradient-to-r from-amber-500 to-emerald-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exercise Layout: Sidebar Navigation + Active Exercise Console -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          
+          <!-- Exercises List (Lg: 4 Cols) -->
+          <div class="lg:col-span-4 bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Exercise Directory</span>
+              <span class="text-[10px] font-mono text-slate-500">25 Interactive Labs</span>
+            </div>
+            <div id="level0ExerciseList" class="space-y-1.5 max-h-[560px] overflow-y-auto pr-1">
+              <!-- Rendered dynamically by app.js -->
+            </div>
+          </div>
+
+          <!-- Active Exercise Console (Lg: 8 Cols) -->
+          <div class="lg:col-span-8 space-y-4">
+            
+            <!-- Exercise Header Card -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span id="level0CategoryBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Category</span>
+                <button id="level0CompleteToggleBtn" onclick="toggleCurrentLevel0Complete()" class="text-xs px-3 py-1 rounded-lg border transition font-bold flex items-center gap-1.5 bg-slate-800 text-slate-300 hover:text-white border-slate-700">
+                  <i class="fa-regular fa-circle-check"></i> <span id="level0CompleteToggleText">Mark Complete</span>
+                </button>
+              </div>
+              <h3 id="level0ActiveTitle" class="text-base font-bold text-white">Exercise Title</h3>
+              <p id="level0ActiveDesc" class="text-xs text-slate-300 leading-relaxed">Description</p>
+            </div>
+
+            <!-- Dynamic Input Form -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+              <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders text-amber-400"></i> Interactive Inputs
+              </h4>
+              <div id="level0InputsContainer" class="space-y-3">
+                <!-- Dynamically populated based on ex.inputs -->
+              </div>
+              <div class="pt-2 flex flex-wrap items-center gap-2">
+                <button onclick="runCurrentLevel0Exercise()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2">
+                  <i class="fa-solid fa-play"></i> Run & Analyze
+                </button>
+                <button onclick="sendLevel0ToCloudIde()" title="Send code snippet directly to Cloud IDE to compile & inspect" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white font-semibold text-xs rounded-xl border border-indigo-500/30 transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-terminal text-indigo-400"></i> Send to Cloud IDE
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Execution Output Box -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2">
+              <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                <i class="fa-solid fa-chart-column text-emerald-400"></i> Live Execution & Architectural Analysis
+              </h4>
+              <div id="level0OutputBox" class="min-h-[140px] text-xs text-slate-200">
+                <!-- Output generated by ex.run() -->
+              </div>
+            </div>
+
+            <!-- Underlying Code Snippet Preview -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                  <i class="fa-solid fa-code text-sky-400"></i> Source Implementation Snippet
+                </h4>
+                <button onclick="copyLevel0Snippet()" class="text-[11px] text-slate-400 hover:text-white flex items-center gap-1">
+                  <i class="fa-regular fa-copy"></i> Copy Code
+                </button>
+              </div>
+              <pre id="level0CodeSnippetBox" class="p-3 bg-slate-900 border border-slate-800 rounded-lg text-emerald-400 font-mono text-xs overflow-x-auto whitespace-pre"></pre>
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
 
       <!-- TAB 2: DIAGNOSTIC PRE-TEST -->
@@ -618,6 +723,7 @@
   <!-- Application Logic Scripts -->
   <script src="./js/questions-data.js"></script>
   <script src="./js/notes-data.js"></script>
+  <script src="./js/level0-exercises.js"></script>
   <script src="./js/ide-engine.js"></script>
   <script src="./js/app.js"></script>
 </body>
