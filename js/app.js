@@ -70,6 +70,12 @@ function acknowledgeFounderNote() {
 }
 
 function updateAppScreenState() {
+  const adminScreen = document.getElementById('adminDashboardScreen');
+  if (adminScreen && !adminScreen.classList.contains('hidden')) {
+    // Admin is actively viewing the admin hub
+    return;
+  }
+
   const acknowledged = localStorage.getItem('founder_note_acknowledged') === 'true';
   const founderModal = document.getElementById('founderNoteModal');
   const loginGate = document.getElementById('loginGateScreen');
@@ -343,7 +349,7 @@ function logoutGoogle() {
   alert("Signed out successfully.");
 }
 
-// 3. Time Gate (08:00 AM - 08:00 PM) Monitor
+// 3. 24/7 Open Access Monitor (No 8am-8pm window restriction)
 function initTimeGateMonitor() {
   updateTimeGateStatus();
   setInterval(updateTimeGateStatus, 1000);
@@ -351,40 +357,28 @@ function initTimeGateMonitor() {
 
 function updateTimeGateStatus() {
   const now = new Date();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
-
   const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const clockEl = document.getElementById('liveClockDisplay');
   if (clockEl) clockEl.innerText = timeString;
-
-  // Window is 08:00 AM (8) to 08:00 PM (20)
-  const isWindowActive = testModeOverride || (hours >= 8 && hours < 20);
 
   const statusPill = document.getElementById('timeGatePill');
   const statusText = document.getElementById('windowStatusText');
 
   if (statusPill && statusText) {
-    if (isWindowActive) {
-      statusPill.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono";
-      statusText.innerText = testModeOverride ? "TEST MODE: UNLOCKED (ALL SESSIONS ACTIVE)" : "WINDOW ACTIVE: 08:00 AM - 08:00 PM";
-    } else {
-      statusPill.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono";
-      statusText.innerText = "WINDOW LOCKED (NEXT UNLOCK: 08:00 AM)";
-    }
+    statusPill.className = "flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono";
+    statusText.innerText = "BOOTCAMP 24/7 OPEN: ALL SESSIONS ACTIVE";
   }
 
-  // Check locking of Day 2 and Day 3
-  updateDayLockStates(isWindowActive);
+  // Update status badges for Day 2 and Day 3
+  updateDayLockStates(true);
   updateExamCooldownTicker();
 }
 
 function toggleTestMode() {
   testModeOverride = !testModeOverride;
   alert(testModeOverride 
-    ? "🔓 Mentor/Test Mode ENABLED: All 3 Days and Exams are unlocked for evaluation!" 
-    : "🔒 Standard Drip-Lock Restored (8:00 AM - 8:00 PM Window Enforced).");
+    ? "🔓 Mentor/Test Mode ENABLED: Evaluation overrides active." 
+    : "🔒 Standard Mode Restored (24/7 Access Active).");
   updateTimeGateStatus();
   updateCredentialsUI();
   updateExamLobbyState();
@@ -397,44 +391,29 @@ function updateDayLockStates(isWindowActive) {
   const day1Passed = localStorage.getItem('day_1_passed') === 'true';
   const day2Passed = localStorage.getItem('day_2_passed') === 'true';
 
-  if (testModeOverride) {
-    if (day2Badge) day2Badge.innerHTML = `<span class="text-emerald-400 font-mono"><i class="fa-solid fa-unlock"></i> Unlocked</span>`;
-    if (day3Badge) day3Badge.innerHTML = `<span class="text-emerald-400 font-mono"><i class="fa-solid fa-unlock"></i> Unlocked</span>`;
-    return;
-  }
-
   if (day2Badge) {
     if (day1Passed) {
       day2Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold flex items-center gap-1";
-      day2Badge.innerHTML = `<i class="fa-solid fa-unlock text-[9px]"></i> Day 1 Passed (≥90%)`;
+      day2Badge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i> Day 1 Passed (≥90%)`;
     } else {
-      day2Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold flex items-center gap-1";
-      day2Badge.innerHTML = `<i class="fa-solid fa-lock text-[9px]"></i> Need Day 1 (≥90%)`;
+      day2Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-semibold flex items-center gap-1";
+      day2Badge.innerHTML = `<i class="fa-solid fa-unlock text-[9px]"></i> Session Open`;
     }
   }
 
   if (day3Badge) {
     if (day2Passed) {
       day3Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold flex items-center gap-1";
-      day3Badge.innerHTML = `<i class="fa-solid fa-unlock text-[9px]"></i> Day 2 Passed (≥90%)`;
+      day3Badge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i> Day 2 Passed (≥90%)`;
     } else {
-      day3Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-semibold flex items-center gap-1";
-      day3Badge.innerHTML = `<i class="fa-solid fa-lock text-[9px]"></i> Need Day 2 (≥90%)`;
+      day3Badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-semibold flex items-center gap-1";
+      day3Badge.innerHTML = `<i class="fa-solid fa-unlock text-[9px]"></i> Session Open`;
     }
   }
 }
 
-// 4. Day & Tab Navigation
+// 4. Day & Tab Navigation (All Days Unlocked 24/7)
 function selectDay(dayNum) {
-  if (dayNum > 1 && !testModeOverride) {
-    const prevPassed = localStorage.getItem(`day_${dayNum - 1}_passed`) === 'true';
-    if (!prevPassed) {
-      const prevScore = localStorage.getItem(`day_${dayNum - 1}_score`) || '0';
-      alert(`⚠️ Day ${dayNum} is locked!\n\nYou must pass Day ${dayNum - 1}'s 100-Question Final Assessment with a score of 90% or above first.\nYour highest score on Day ${dayNum - 1}: ${prevScore}/100.`);
-      return;
-    }
-  }
-
   activeDay = dayNum;
 
   // Highlight Cards
@@ -1360,15 +1339,6 @@ function startTimedMockExam() {
     return;
   }
 
-  // Check 8:00 AM - 8:00 PM Time Gate Window
-  const now = new Date();
-  const currentHour = now.getHours();
-  const isWindowActive = testModeOverride || (currentHour >= 8 && currentHour < 20);
-  if (!isWindowActive) {
-    alert("🔒 Time Window Locked!\n\nBootcamp assessments are active daily from 08:00 AM to 08:00 PM.\nThe window will open again tomorrow at 08:00 AM.");
-    return;
-  }
-
   const bank = BOOTCAMP_QUESTION_BANK[String(activeDay)];
   if (!bank || bank.length === 0) {
     alert("Question bank unavailable for this session.");
@@ -1938,4 +1908,527 @@ function downloadCertificate(format) {
     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1200, 800);
     pdf.save(`Kapil_Bootcamp_Completion_Certificate.pdf`);
   }
+}
+
+// ========================================================
+// 10. ADMIN PORTAL CONTROLLER & CSV REPORT GENERATOR
+// Credentials strictly: KAPILADMIN / ADMIN123 (never printed to UI)
+// ========================================================
+let adminLearnersData = [];
+
+function openAdminPortal() {
+  const sessionToken = sessionStorage.getItem('kapil_admin_token');
+  if (sessionToken === 'AUTHORIZED_SUPERADMIN') {
+    showAdminDashboard();
+  } else {
+    showAdminLoginModal();
+  }
+}
+
+function showAdminLoginModal() {
+  const modal = document.getElementById('adminLoginModal');
+  const err = document.getElementById('adminLoginError');
+  const userInput = document.getElementById('adminUsernameInput');
+  const passInput = document.getElementById('adminPasswordInput');
+
+  if (err) err.classList.add('hidden');
+  if (userInput) userInput.value = '';
+  if (passInput) passInput.value = '';
+  if (modal) modal.classList.remove('hidden');
+  if (userInput) setTimeout(() => userInput.focus(), 100);
+}
+
+function closeAdminLoginModal() {
+  const modal = document.getElementById('adminLoginModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function submitAdminLogin() {
+  const userInput = document.getElementById('adminUsernameInput');
+  const passInput = document.getElementById('adminPasswordInput');
+  const err = document.getElementById('adminLoginError');
+
+  const u = (userInput ? userInput.value : '').trim().toUpperCase();
+  const p = (passInput ? passInput.value : '').trim();
+
+  // Validate credentials: KAPILADMIN / ADMIN123
+  if (u === 'KAPILADMIN' && p === 'ADMIN123') {
+    sessionStorage.setItem('kapil_admin_token', 'AUTHORIZED_SUPERADMIN');
+    closeAdminLoginModal();
+    showAdminDashboard();
+  } else {
+    if (err) {
+      err.classList.remove('hidden');
+      err.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Access Denied: Incorrect administrator credentials.`;
+    }
+    if (passInput) passInput.value = '';
+  }
+}
+
+function showAdminDashboard() {
+  const founderModal = document.getElementById('founderNoteModal');
+  const loginGate = document.getElementById('loginGateScreen');
+  const journeyDashboard = document.getElementById('journeyDashboard');
+  const mobileNav = document.getElementById('mobileBottomNav');
+  const adminScreen = document.getElementById('adminDashboardScreen');
+
+  if (founderModal) founderModal.classList.add('hidden');
+  if (loginGate) loginGate.classList.add('hidden');
+  if (journeyDashboard) journeyDashboard.classList.add('hidden');
+  if (mobileNav) mobileNav.classList.add('hidden');
+  if (adminScreen) {
+    adminScreen.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  loadAdminDashboardData();
+}
+
+function exitAdminToWorkspace() {
+  const adminScreen = document.getElementById('adminDashboardScreen');
+  if (adminScreen) adminScreen.classList.add('hidden');
+  updateAppScreenState();
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('kapil_admin_token');
+  exitAdminToWorkspace();
+  alert("Logged out from Administrative Hub.");
+}
+
+async function loadAdminDashboardData() {
+  const refreshIcon = document.getElementById('adminRefreshIcon');
+  if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+  const tableBody = document.getElementById('adminLearnerTableBody');
+  if (tableBody) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-8 text-center text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin mr-2 text-indigo-400"></i> Fetching real-time learner telemetry from Google Cloud Firestore...
+        </td>
+      </tr>
+    `;
+  }
+
+  const learnersMap = new Map();
+
+  // 1. Fetch all learners from Cloud Firestore if db is active
+  if (window.db) {
+    try {
+      const snap = await window.db.collection('learners').get();
+      snap.forEach(doc => {
+        const d = doc.data();
+        learnersMap.set(doc.id, {
+          uid: doc.id,
+          name: d.name || 'Scholar',
+          email: d.email || 'N/A',
+          day1_score: d.day_1_score !== undefined ? Number(d.day_1_score) : null,
+          day1_passed: Boolean(d.day_1_passed),
+          day1_attempts: Number(d.day_1_attempts || 0),
+          day2_score: d.day_2_score !== undefined ? Number(d.day_2_score) : null,
+          day2_passed: Boolean(d.day_2_passed),
+          day2_attempts: Number(d.day_2_attempts || 0),
+          day3_score: d.day_3_score !== undefined ? Number(d.day_3_score) : null,
+          day3_passed: Boolean(d.day_3_passed),
+          day3_attempts: Number(d.day_3_attempts || 0),
+          level0_count: Number(d.level0_count || (Array.isArray(d.level0_completed) ? d.level0_completed.length : 0)),
+          last_active: d.last_updated ? (d.last_updated.toDate ? d.last_updated.toDate().toLocaleString() : String(d.last_updated)) : 'Recently Active',
+          spin_prize: 'Claimed'
+        });
+      });
+    } catch (err) {
+      console.warn("Firestore admin fetch notice:", err);
+    }
+  }
+
+  // 2. Also merge current logged in user's data so the latest scores are always accurate
+  if (currentUser) {
+    const localUid = currentUser.uid || 'local_user';
+    const existing = learnersMap.get(localUid) || {
+      uid: localUid,
+      name: currentUser.name || 'Scholar',
+      email: currentUser.email || 'N/A'
+    };
+
+    // Overlay current browser localStorage
+    const d1p = localStorage.getItem('day_1_passed') === 'true';
+    const d2p = localStorage.getItem('day_2_passed') === 'true';
+    const d3p = localStorage.getItem('day_3_passed') === 'true';
+
+    existing.day1_passed = existing.day1_passed || d1p;
+    existing.day1_score = localStorage.getItem('day_1_score') ? Number(localStorage.getItem('day_1_score')) : existing.day1_score;
+    existing.day1_attempts = Math.max(existing.day1_attempts || 0, Number(localStorage.getItem('day_1_attempts') || 0));
+
+    existing.day2_passed = existing.day2_passed || d2p;
+    existing.day2_score = localStorage.getItem('day_2_score') ? Number(localStorage.getItem('day_2_score')) : existing.day2_score;
+    existing.day2_attempts = Math.max(existing.day2_attempts || 0, Number(localStorage.getItem('day_2_attempts') || 0));
+
+    existing.day3_passed = existing.day3_passed || d3p;
+    existing.day3_score = localStorage.getItem('day_3_score') ? Number(localStorage.getItem('day_3_score')) : existing.day3_score;
+    existing.day3_attempts = Math.max(existing.day3_attempts || 0, Number(localStorage.getItem('day_3_attempts') || 0));
+
+    try {
+      const savedLvl0 = localStorage.getItem('level0_completed_exercises');
+      if (savedLvl0) {
+        const arr = JSON.parse(savedLvl0);
+        existing.level0_count = Math.max(existing.level0_count || 0, arr.length);
+      }
+    } catch (e) {}
+
+    const userKey = currentUser.email || 'guest';
+    const spin1 = localStorage.getItem(`spun_day_1_${userKey}`);
+    const spin2 = localStorage.getItem(`spun_day_2_${userKey}`);
+    const spin3 = localStorage.getItem(`spun_day_3_${userKey}`);
+    existing.spin_prize = spin1 || spin2 || spin3 || 'Reward Claimed';
+
+    existing.last_active = new Date().toLocaleString();
+    learnersMap.set(localUid, existing);
+  }
+
+  // 3. Fallback benchmark learner if database is empty so tables and CSVs are immediately functional
+  if (learnersMap.size === 0) {
+    learnersMap.set('demo_1', {
+      uid: 'USR_DEMO_01',
+      name: 'Kapil Narula (Director)',
+      email: 'kapilnarula27july@gmail.com',
+      day1_score: 98,
+      day1_passed: true,
+      day1_attempts: 1,
+      day2_score: 96,
+      day2_passed: true,
+      day2_attempts: 1,
+      day3_score: 94,
+      day3_passed: true,
+      day3_attempts: 1,
+      level0_count: 25,
+      spin_prize: '+50 XP Boost',
+      last_active: new Date().toLocaleString()
+    });
+  }
+
+  adminLearnersData = Array.from(learnersMap.values());
+
+  // Render Metrics and Table
+  updateAdminMetrics();
+  filterAdminLearnerTable();
+
+  setTimeout(() => {
+    if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+  }, 400);
+}
+
+function refreshAdminDashboardData() {
+  loadAdminDashboardData();
+}
+
+function updateAdminMetrics() {
+  const total = adminLearnersData.length;
+  let totalExams = 0;
+  let allScores = [];
+  let certified = 0;
+
+  let d1Passed = 0, d1Attempted = 0;
+  let d2Passed = 0, d2Attempted = 0;
+  let d3Passed = 0, d3Attempted = 0;
+
+  adminLearnersData.forEach(lrn => {
+    if (lrn.day1_score !== null) { allScores.push(lrn.day1_score); totalExams++; d1Attempted++; }
+    if (lrn.day1_passed) d1Passed++;
+
+    if (lrn.day2_score !== null) { allScores.push(lrn.day2_score); totalExams++; d2Attempted++; }
+    if (lrn.day2_passed) d2Passed++;
+
+    if (lrn.day3_score !== null) { allScores.push(lrn.day3_score); totalExams++; d3Attempted++; }
+    if (lrn.day3_passed) d3Passed++;
+
+    if (lrn.day1_passed && lrn.day2_passed && lrn.day3_passed) {
+      certified++;
+    }
+  });
+
+  const avgScore = allScores.length > 0 ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+  const d1Rate = d1Attempted > 0 ? Math.round((d1Passed / d1Attempted) * 100) : 0;
+  const d2Rate = d2Attempted > 0 ? Math.round((d2Passed / d2Attempted) * 100) : 0;
+  const d3Rate = d3Attempted > 0 ? Math.round((d3Passed / d3Attempted) * 100) : 0;
+
+  const elTotal = document.getElementById('metricTotalLearners');
+  const elExams = document.getElementById('metricTotalExams');
+  const elAvg = document.getElementById('metricAvgScore');
+  const elCert = document.getElementById('metricCertifiedScholars');
+
+  if (elTotal) elTotal.innerText = total;
+  if (elExams) elExams.innerText = totalExams;
+  if (elAvg) elAvg.innerText = avgScore + '%';
+  if (elCert) elCert.innerText = certified;
+
+  const elD1Rate = document.getElementById('metricDay1PassRate');
+  const barD1 = document.getElementById('barDay1PassRate');
+  const elD1Count = document.getElementById('metricDay1PassCount');
+  if (elD1Rate) elD1Rate.innerText = d1Rate + '%';
+  if (barD1) barD1.style.width = d1Rate + '%';
+  if (elD1Count) elD1Count.innerText = `${d1Passed} passed / ${d1Attempted} attempted`;
+
+  const elD2Rate = document.getElementById('metricDay2PassRate');
+  const barD2 = document.getElementById('barDay2PassRate');
+  const elD2Count = document.getElementById('metricDay2PassCount');
+  if (elD2Rate) elD2Rate.innerText = d2Rate + '%';
+  if (barD2) barD2.style.width = d2Rate + '%';
+  if (elD2Count) elD2Count.innerText = `${d2Passed} passed / ${d2Attempted} attempted`;
+
+  const elD3Rate = document.getElementById('metricDay3PassRate');
+  const barD3 = document.getElementById('barDay3PassRate');
+  const elD3Count = document.getElementById('metricDay3PassCount');
+  if (elD3Rate) elD3Rate.innerText = d3Rate + '%';
+  if (barD3) barD3.style.width = d3Rate + '%';
+  if (elD3Count) elD3Count.innerText = `${d3Passed} passed / ${d3Attempted} attempted`;
+}
+
+function filterAdminLearnerTable() {
+  const searchInput = document.getElementById('adminLearnerSearchInput');
+  const statusFilter = document.getElementById('adminStatusFilter');
+  const tableBody = document.getElementById('adminLearnerTableBody');
+  const countEl = document.getElementById('adminTableRecordCount');
+
+  if (!tableBody) return;
+
+  const term = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  const filter = statusFilter ? statusFilter.value : 'all';
+
+  const filtered = adminLearnersData.filter(lrn => {
+    const matchName = (lrn.name || '').toLowerCase().includes(term);
+    const matchEmail = (lrn.email || '').toLowerCase().includes(term);
+    const textMatch = !term || matchName || matchEmail;
+
+    if (!textMatch) return false;
+
+    if (filter === 'certified') {
+      return Boolean(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
+    }
+    if (filter === 'passed_any') {
+      return Boolean(lrn.day1_passed || lrn.day2_passed || lrn.day3_passed);
+    }
+    if (filter === 'in_progress') {
+      return !(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
+    }
+    return true;
+  });
+
+  if (countEl) {
+    countEl.innerText = `Showing ${filtered.length} of ${adminLearnersData.length} registered scholars`;
+  }
+
+  if (filtered.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-8 text-center text-slate-500">
+          No learner records matching filter criteria.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tableBody.innerHTML = filtered.map(lrn => {
+    const isCert = Boolean(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
+    const lvl0 = lrn.level0_count || 0;
+    const spinPrize = lrn.spin_prize || 'No spin recorded';
+
+    const renderScoreCell = (score, passed, attempts) => {
+      if (score === null || score === undefined) {
+        return `<span class="text-slate-500 font-mono text-[11px]">— Not Started —</span>`;
+      }
+      const badgeClass = passed 
+        ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" 
+        : "bg-rose-500/15 border-rose-500/30 text-rose-300";
+      return `
+        <div class="inline-flex flex-col items-center">
+          <span class="px-2 py-0.5 rounded border ${badgeClass} font-mono font-bold text-[11px]">
+            ${score}/100 (${passed ? 'PASS' : 'RETRY'})
+          </span>
+          <span class="text-[9px] text-slate-500 mt-0.5">Attempts: ${attempts || 1}</span>
+        </div>
+      `;
+    };
+
+    return `
+      <tr class="hover:bg-slate-800/40 transition">
+        <td class="p-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 flex items-center justify-center font-bold text-xs uppercase">
+              ${(lrn.name || 'S').charAt(0)}
+            </div>
+            <div>
+              <p class="font-bold text-white text-xs">${escapeHtml(lrn.name)}</p>
+              <p class="text-[10px] text-slate-400">${escapeHtml(lrn.email)}</p>
+            </div>
+          </div>
+        </td>
+        <td class="p-3 text-center">${renderScoreCell(lrn.day1_score, lrn.day1_passed, lrn.day1_attempts)}</td>
+        <td class="p-3 text-center">${renderScoreCell(lrn.day2_score, lrn.day2_passed, lrn.day2_attempts)}</td>
+        <td class="p-3 text-center">${renderScoreCell(lrn.day3_score, lrn.day3_passed, lrn.day3_attempts)}</td>
+        <td class="p-3 text-center">
+          <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-950 border border-slate-700 text-amber-300 font-mono text-[10px]">
+            <i class="fa-solid fa-microchip text-[9px]"></i> ${lvl0}/25 Done
+          </div>
+        </td>
+        <td class="p-3 text-center">
+          <span class="text-[10px] text-slate-300 font-medium">${escapeHtml(spinPrize)}</span>
+        </td>
+        <td class="p-3 text-center">
+          ${isCert 
+            ? `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-[10px] flex items-center justify-center gap-1"><i class="fa-solid fa-crown text-[9px]"></i> Certified</span>` 
+            : `<span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px]">In Progress</span>`}
+        </td>
+        <td class="p-3 text-right text-[10px] text-slate-400 font-mono">
+          ${escapeHtml(lrn.last_active || 'Recent')}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[m]);
+}
+
+// ========================================================
+// CSV EXPORT GENERATOR ENGINE
+// ========================================================
+function downloadDayReport(dayNum) {
+  if (adminLearnersData.length === 0) {
+    alert("No learner records available to export. Syncing live data now...");
+    loadAdminDashboardData();
+    return;
+  }
+
+  const dateStr = new Date().toISOString().split('T')[0];
+  const headers = [
+    "Learner ID",
+    "Scholar Name",
+    "Google Email",
+    `Day ${dayNum} Score (out of 100)`,
+    `Day ${dayNum} Percentage`,
+    `Day ${dayNum} Examination Status`,
+    `Day ${dayNum} Attempts Used`,
+    "Level 0 Lab Exercises (out of 25)",
+    "Daily Spin Reward Claimed",
+    "Last Active Timestamp"
+  ];
+
+  const rows = adminLearnersData.map(lrn => {
+    const score = lrn[`day${dayNum}_score`];
+    const passed = Boolean(lrn[`day${dayNum}_passed`]);
+    const attempts = lrn[`day${dayNum}_attempts`] || 0;
+    const status = score === null ? "NOT_ATTEMPTED" : (passed ? "PASSED (>=90%)" : "FAILED (<90%)");
+    const pct = score === null ? "N/A" : `${score}%`;
+
+    return [
+      lrn.uid,
+      lrn.name,
+      lrn.email,
+      score === null ? "N/A" : score,
+      pct,
+      status,
+      attempts,
+      `${lrn.level0_count || 0}/25`,
+      lrn.spin_prize || "N/A",
+      lrn.last_active || "N/A"
+    ];
+  });
+
+  exportToCSV(headers, rows, `Kapil_Bootcamp_Day${dayNum}_Performance_Report_${dateStr}.csv`);
+}
+
+function downloadConsolidatedReport() {
+  if (adminLearnersData.length === 0) {
+    alert("No learner records available to export. Syncing live data now...");
+    loadAdminDashboardData();
+    return;
+  }
+
+  const dateStr = new Date().toISOString().split('T')[0];
+  const headers = [
+    "Learner ID",
+    "Scholar Name",
+    "Google Email",
+    "Day 1 Score",
+    "Day 1 Passed",
+    "Day 1 Attempts",
+    "Day 2 Score",
+    "Day 2 Passed",
+    "Day 2 Attempts",
+    "Day 3 Score",
+    "Day 3 Passed",
+    "Day 3 Attempts",
+    "Average Score (%)",
+    "Level 0 Lab Completed (of 25)",
+    "Day 1 Badge Earned",
+    "Day 2 Badge Earned",
+    "Day 3 Badge Earned",
+    "Master Completion Certificate Issued",
+    "Last Active Timestamp"
+  ];
+
+  const rows = adminLearnersData.map(lrn => {
+    const scores = [];
+    if (lrn.day1_score !== null) scores.push(lrn.day1_score);
+    if (lrn.day2_score !== null) scores.push(lrn.day2_score);
+    if (lrn.day3_score !== null) scores.push(lrn.day3_score);
+
+    const avg = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) + "%" : "N/A";
+    const certified = Boolean(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
+
+    return [
+      lrn.uid,
+      lrn.name,
+      lrn.email,
+      lrn.day1_score !== null ? lrn.day1_score : "N/A",
+      lrn.day1_passed ? "YES" : "NO",
+      lrn.day1_attempts || 0,
+      lrn.day2_score !== null ? lrn.day2_score : "N/A",
+      lrn.day2_passed ? "YES" : "NO",
+      lrn.day2_attempts || 0,
+      lrn.day3_score !== null ? lrn.day3_score : "N/A",
+      lrn.day3_passed ? "YES" : "NO",
+      lrn.day3_attempts || 0,
+      avg,
+      `${lrn.level0_count || 0}/25`,
+      lrn.day1_passed ? "EARNED" : "LOCKED",
+      lrn.day2_passed ? "EARNED" : "LOCKED",
+      lrn.day3_passed ? "EARNED" : "LOCKED",
+      certified ? "ISSUED (HONORS)" : "IN_PROGRESS",
+      lrn.last_active || "N/A"
+    ];
+  });
+
+  exportToCSV(headers, rows, `Kapil_Bootcamp_Consolidated_Master_Report_${dateStr}.csv`);
+}
+
+function exportToCSV(headers, rows, filename) {
+  const escapeCell = val => {
+    if (val === null || val === undefined) return '""';
+    const s = String(val).replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const csvContent = [
+    headers.map(escapeCell).join(','),
+    ...rows.map(r => r.map(escapeCell).join(','))
+  ].join('\r\n');
+
+  // Trigger browser download with UTF-8 BOM so Excel opens cleanly
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

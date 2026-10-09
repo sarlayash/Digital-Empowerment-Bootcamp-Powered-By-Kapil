@@ -71,16 +71,21 @@
       <!-- Controls & Google Authentication -->
       <div class="flex items-center space-x-3">
         
-        <!-- Live Clock & Drip Lock Status -->
+        <!-- Live Clock & 24/7 Access Status -->
         <div id="timeGatePill" class="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span id="windowStatusText">WINDOW ACTIVE: 08:00 AM - 08:00 PM</span>
+          <span id="windowStatusText">BOOTCAMP 24/7 OPEN: ALL SESSIONS ACTIVE</span>
           <span class="text-slate-500">|</span>
           <span id="liveClockDisplay" class="font-bold">--:--:--</span>
         </div>
+
+        <!-- Admin Portal Access Button -->
+        <button onclick="openAdminPortal()" title="Admin Performance Dashboard" class="text-xs px-2.5 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition flex items-center gap-1.5 font-bold">
+          <i class="fa-solid fa-shield-halved text-rose-400"></i> <span class="hidden sm:inline">Admin</span>
+        </button>
 
         <!-- Founder's Note Button -->
         <button onclick="showFounderNoteModal()" title="View Kapil's Founder Note & Vision" class="text-xs px-2.5 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition flex items-center gap-1.5 font-bold">
@@ -122,6 +127,50 @@
 
     </div>
   </header>
+
+  <!-- ======================================================== -->
+  <!-- ADMIN AUTHENTICATION MODAL                               -->
+  <!-- Credentials strictly kept secret (never shown on screen) -->
+  <!-- ======================================================== -->
+  <div id="adminLoginModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 md:p-8 space-y-5 shadow-2xl relative">
+      <button onclick="closeAdminLoginModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-600/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-2xl shadow-lg">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 class="text-lg font-black text-white tracking-tight">Admin Intelligence Portal</h3>
+        <p class="text-xs text-slate-400">Strictly restricted to authorized mentors and program directors.</p>
+      </div>
+
+      <div id="adminLoginError" class="hidden p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-center text-xs text-rose-300 font-semibold">
+        <i class="fa-solid fa-circle-exclamation mr-1"></i> Access Denied: Invalid credentials.
+      </div>
+
+      <form onsubmit="event.preventDefault(); submitAdminLogin();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Administrator ID</label>
+          <input type="text" id="adminUsernameInput" autocomplete="off" placeholder="Enter Admin User ID" class="w-full bg-slate-950 border border-slate-700 text-sm text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-rose-500 transition font-mono" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Security Key / Password</label>
+          <input type="password" id="adminPasswordInput" autocomplete="off" placeholder="Enter Password" class="w-full bg-slate-950 border border-slate-700 text-sm text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-rose-500 transition font-mono" required>
+        </div>
+
+        <button type="submit" id="btnAdminAuthenticate" class="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-extrabold text-xs md:text-sm rounded-xl shadow-lg shadow-rose-600/20 transition active:scale-95 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-lock-open"></i> Authenticate & Access Portal
+        </button>
+      </form>
+
+      <p class="text-[11px] text-slate-500 text-center">
+        Protected by session token authentication. Session expires upon closing or logging out.
+      </p>
+    </div>
+  </div>
 
   <!-- ======================================================== -->
   <!-- SCREEN 1: FOUNDER'S NOTE MODAL / ONBOARDING SHOWCASE     -->
@@ -236,9 +285,12 @@
         <span id="gateGoogleLoginText">SIGN IN WITH GOOGLE</span>
       </button>
 
-      <div class="pt-2">
+      <div class="pt-2 flex flex-col items-center space-y-2">
         <button onclick="showFounderNoteModal()" class="text-xs text-amber-400 hover:text-amber-300 underline font-semibold flex items-center justify-center gap-1 mx-auto">
           <i class="fa-solid fa-arrow-left text-[10px]"></i> Re-read Kapil's Founder Note
+        </button>
+        <button onclick="openAdminPortal()" class="text-[11px] text-slate-500 hover:text-rose-400 transition flex items-center justify-center gap-1 mx-auto font-medium">
+          <i class="fa-solid fa-shield-halved text-[10px]"></i> Authorized Admin Portal
         </button>
       </div>
 
@@ -275,7 +327,7 @@
           <div id="day1Card" onclick="selectDay(1)" class="cursor-pointer border-2 border-indigo-500 bg-indigo-950/40 rounded-xl p-3.5 transition">
             <div class="flex items-center justify-between mb-1">
               <span class="text-xs font-bold text-indigo-400 uppercase">Day 1 • 6 Hours</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">Active Window</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">Session Open</span>
             </div>
             <h3 class="text-sm font-bold text-white">IT Foundation, OS, MS-Word & Basics of C</h3>
             <p class="text-xs text-slate-400 mt-1">Zero to Infinity • 100 Qs Mock • Day 1 Badge</p>
@@ -285,8 +337,8 @@
           <div id="day2Card" onclick="selectDay(2)" class="cursor-pointer border border-slate-800 bg-slate-900/60 rounded-xl p-3.5 transition hover:border-slate-700">
             <div class="flex items-center justify-between mb-1">
               <span class="text-xs font-bold text-slate-400 uppercase">Day 2 • 6 Hours</span>
-              <span id="day2LockBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold flex items-center gap-1">
-                <i class="fa-solid fa-lock text-[9px]"></i> Unlocks 08:00 AM
+              <span id="day2LockBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-unlock text-[9px]"></i> Session Open
               </span>
             </div>
             <h3 class="text-sm font-bold text-slate-200">Modular C, Recursion, RDBMS & MS-Excel</h3>
@@ -297,8 +349,8 @@
           <div id="day3Card" onclick="selectDay(3)" class="cursor-pointer border border-slate-800 bg-slate-900/60 rounded-xl p-3.5 transition hover:border-slate-700">
             <div class="flex items-center justify-between mb-1">
               <span class="text-xs font-bold text-slate-400 uppercase">Day 3 • 3 Hours</span>
-              <span id="day3LockBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-semibold flex items-center gap-1">
-                <i class="fa-solid fa-lock text-[9px]"></i> Grand Finale
+              <span id="day3LockBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-unlock text-[9px]"></i> Session Open
               </span>
             </div>
             <h3 class="text-sm font-bold text-slate-200">HTML, CSS Colors & JavaScript Variables</h3>
@@ -772,9 +824,239 @@
 
   </main>
 
+  <!-- ======================================================== -->
+  <!-- SCREEN 4: ADMIN COMMAND & PERFORMANCE ANALYTICS PORTAL    -->
+  <!-- ======================================================== -->
+  <div id="adminDashboardScreen" class="hidden flex-1 max-w-7xl mx-auto w-full p-3 md:p-6 space-y-6">
+    
+    <!-- Top Command Navigation -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+      <div class="flex items-center space-x-3.5">
+        <div class="h-11 w-11 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-white text-xl shadow-lg shadow-rose-500/20">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base md:text-lg font-black text-white">Kapil Bootcamp Administrative Hub</h2>
+            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono font-bold">SUPERADMIN</span>
+          </div>
+          <p class="text-xs text-slate-400">Real-time scholar telemetry, exam diagnostics & CSV report generation</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5 w-full md:w-auto justify-end flex-wrap">
+        <button onclick="refreshAdminDashboardData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 font-bold">
+          <i id="adminRefreshIcon" class="fa-solid fa-rotate"></i> Sync Live Data
+        </button>
+        <button onclick="exitAdminToWorkspace()" class="px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs rounded-xl border border-indigo-500/40 transition flex items-center gap-1.5 font-bold">
+          <i class="fa-solid fa-graduation-cap"></i> Learner Workspace
+        </button>
+        <button onclick="adminLogout()" class="px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs rounded-xl border border-rose-500/40 transition flex items-center gap-1.5 font-bold">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Admin Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick CSV Download Deck -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-900/50 rounded-2xl p-4 md:p-5 shadow-xl space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-csv text-emerald-400 text-base"></i>
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">Automated CSV Report Downloads</h3>
+        </div>
+        <span class="text-[11px] text-slate-400 font-mono">Real-Time Data Feeds</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Download Day 1 CSV -->
+        <button onclick="downloadDayReport(1)" class="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/60 rounded-xl transition text-left group">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-extrabold text-indigo-400 group-hover:text-emerald-400 transition">Day 1 Report</span>
+            <i class="fa-solid fa-download text-xs text-slate-400 group-hover:text-emerald-400 transition"></i>
+          </div>
+          <p class="text-[11px] text-slate-300">Foundation, OS, MS-Word & C</p>
+          <p class="text-[10px] text-slate-500 mt-1 font-mono">Scores, Retries, Cooldowns • CSV</p>
+        </button>
+
+        <!-- Download Day 2 CSV -->
+        <button onclick="downloadDayReport(2)" class="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/60 rounded-xl transition text-left group">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-extrabold text-sky-400 group-hover:text-emerald-400 transition">Day 2 Report</span>
+            <i class="fa-solid fa-download text-xs text-slate-400 group-hover:text-emerald-400 transition"></i>
+          </div>
+          <p class="text-[11px] text-slate-300">Modular C, RDBMS & Excel</p>
+          <p class="text-[10px] text-slate-500 mt-1 font-mono">Scores, Retries, Cooldowns • CSV</p>
+        </button>
+
+        <!-- Download Day 3 CSV -->
+        <button onclick="downloadDayReport(3)" class="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/60 rounded-xl transition text-left group">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-extrabold text-amber-400 group-hover:text-emerald-400 transition">Day 3 Report</span>
+            <i class="fa-solid fa-download text-xs text-slate-400 group-hover:text-emerald-400 transition"></i>
+          </div>
+          <p class="text-[11px] text-slate-300">HTML, CSS & JS Variables</p>
+          <p class="text-[10px] text-slate-500 mt-1 font-mono">Scores, Retries, Cooldowns • CSV</p>
+        </button>
+
+        <!-- Download Consolidated Master CSV -->
+        <button onclick="downloadConsolidatedReport()" class="p-3 bg-gradient-to-r from-emerald-950/50 to-slate-900 hover:from-emerald-900/60 border border-emerald-500/60 rounded-xl transition text-left group shadow-lg">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-extrabold text-emerald-300 group-hover:text-emerald-200 transition">Consolidated Master</span>
+            <i class="fa-solid fa-file-excel text-xs text-emerald-400 group-hover:scale-110 transition"></i>
+          </div>
+          <p class="text-[11px] text-emerald-100 font-semibold">Complete 3-Day Performance</p>
+          <p class="text-[10px] text-emerald-400/80 mt-1 font-mono">All Badges, Certs & Telemetry • CSV</p>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Performance Metric Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-lg text-left">
+        <div class="flex items-center justify-between text-slate-400 mb-2">
+          <span class="text-xs uppercase font-bold tracking-wider">Registered Scholars</span>
+          <i class="fa-solid fa-users text-indigo-400"></i>
+        </div>
+        <p id="metricTotalLearners" class="text-2xl font-black text-white">0</p>
+        <p class="text-[10px] text-slate-400 mt-1">Verified Google accounts</p>
+      </div>
+
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-lg text-left">
+        <div class="flex items-center justify-between text-slate-400 mb-2">
+          <span class="text-xs uppercase font-bold tracking-wider">Exams Completed</span>
+          <i class="fa-solid fa-list-check text-sky-400"></i>
+        </div>
+        <p id="metricTotalExams" class="text-2xl font-black text-white">0</p>
+        <p class="text-[10px] text-slate-400 mt-1">100-Question submissions</p>
+      </div>
+
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-lg text-left">
+        <div class="flex items-center justify-between text-slate-400 mb-2">
+          <span class="text-xs uppercase font-bold tracking-wider">Avg Exam Score</span>
+          <i class="fa-solid fa-chart-simple text-amber-400"></i>
+        </div>
+        <p id="metricAvgScore" class="text-2xl font-black text-white">0%</p>
+        <p class="text-[10px] text-slate-400 mt-1">Pass benchmark is ≥90%</p>
+      </div>
+
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-lg text-left">
+        <div class="flex items-center justify-between text-slate-400 mb-2">
+          <span class="text-xs uppercase font-bold tracking-wider">Master Certified</span>
+          <i class="fa-solid fa-award text-emerald-400"></i>
+        </div>
+        <p id="metricCertifiedScholars" class="text-2xl font-black text-emerald-400">0</p>
+        <p class="text-[10px] text-slate-400 mt-1">Passed all 3 final mocks</p>
+      </div>
+    </div>
+
+    <!-- Day-Wise Pass Rate Progress Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+        <div class="flex justify-between items-center text-xs font-bold mb-1">
+          <span class="text-indigo-400">Day 1 Pass Rate (≥90%)</span>
+          <span id="metricDay1PassRate" class="text-white font-mono">0%</span>
+        </div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div id="barDay1PassRate" class="bg-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <p id="metricDay1PassCount" class="text-[10px] text-slate-400 mt-1.5 font-mono">0 passed / 0 attempted</p>
+      </div>
+
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+        <div class="flex justify-between items-center text-xs font-bold mb-1">
+          <span class="text-sky-400">Day 2 Pass Rate (≥90%)</span>
+          <span id="metricDay2PassRate" class="text-white font-mono">0%</span>
+        </div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div id="barDay2PassRate" class="bg-sky-500 h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <p id="metricDay2PassCount" class="text-[10px] text-slate-400 mt-1.5 font-mono">0 passed / 0 attempted</p>
+      </div>
+
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+        <div class="flex justify-between items-center text-xs font-bold mb-1">
+          <span class="text-amber-400">Day 3 Pass Rate (≥90%)</span>
+          <span id="metricDay3PassRate" class="text-white font-mono">0%</span>
+        </div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div id="barDay3PassRate" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <p id="metricDay3PassCount" class="text-[10px] text-slate-400 mt-1.5 font-mono">0 passed / 0 attempted</p>
+      </div>
+    </div>
+
+    <!-- Real-Time Learners Performance Roster Table -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl space-y-3 p-4">
+      
+      <!-- Table Header & Filter Controls -->
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-indigo-400"></i> Real-Time Scholar Performance Roster
+          </h3>
+          <p class="text-xs text-slate-400">Live scorecards, exam lifelines, Level 0 exercises & credentials</p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Search box -->
+          <div class="relative flex-1 md:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+            <input type="text" id="adminLearnerSearchInput" oninput="filterAdminLearnerTable()" placeholder="Search scholar name or email..." class="w-full bg-slate-950 border border-slate-700 text-xs text-white rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:border-indigo-500 font-sans">
+          </div>
+
+          <!-- Status Filter -->
+          <select id="adminStatusFilter" onchange="filterAdminLearnerTable()" class="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 font-sans">
+            <option value="all">All Scholars</option>
+            <option value="certified">Master Certified (All 3)</option>
+            <option value="passed_any">Passed ≥1 Exam</option>
+            <option value="in_progress">In Progress</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Responsive Table Container -->
+      <div class="overflow-x-auto rounded-xl border border-slate-800/80">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-950/80 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+            <tr>
+              <th class="p-3">Scholar</th>
+              <th class="p-3 text-center">Day 1 Score</th>
+              <th class="p-3 text-center">Day 2 Score</th>
+              <th class="p-3 text-center">Day 3 Score</th>
+              <th class="p-3 text-center">Level 0 Lab</th>
+              <th class="p-3 text-center">Daily Spin</th>
+              <th class="p-3 text-center">Milestone Status</th>
+              <th class="p-3 text-right">Last Active</th>
+            </tr>
+          </thead>
+          <tbody id="adminLearnerTableBody" class="divide-y divide-slate-800">
+            <tr>
+              <td colspan="8" class="p-6 text-center text-slate-500">
+                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading real-time learner records...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+        <span id="adminTableRecordCount">Showing 0 registered scholars</span>
+        <span>Data synchronized with Google Firestore</span>
+      </div>
+
+    </div>
+
+  </div>
+
   <!-- Footer -->
-  <footer class="border-t border-slate-800 bg-slate-900/60 px-4 py-4 text-center text-xs text-slate-400">
+  <footer class="border-t border-slate-800 bg-slate-900/60 px-4 py-4 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2 max-w-7xl mx-auto w-full">
     <p>Digital Empowerment Bootcamp • Powered By Kapil • Zero Assumptions • From Zero to Infinity</p>
+    <div class="flex items-center space-x-3">
+      <button onclick="openAdminPortal()" class="text-[11px] text-slate-500 hover:text-rose-400 transition font-mono flex items-center gap-1">
+        <i class="fa-solid fa-shield-halved text-[10px]"></i> Admin Portal
+      </button>
+    </div>
   </footer>
 
   <!-- Hidden Canvas for Vector Graphics & PDF Rendering -->
