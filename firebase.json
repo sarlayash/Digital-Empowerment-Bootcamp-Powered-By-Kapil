@@ -7,7 +7,8 @@
       "**/.*",
       "server.js",
       "build_full_database.py",
-      "generate_day1.py"
+      "generate_day1.py",
+      "users.json"
     ],
     "headers": [
       {

@@ -2885,296 +2885,15 @@ function submitAdminLogin() {
 // ========================================================
 // REAL FIREBASE AUTHENTICATION SCHOLAR ROSTER
 // Ground truth accounts from Google Firebase Authentication Console
+// Loaded from js/firebase-auth-roster.js and data/firebase-roster.json (37 Scholars)
 // ========================================================
-const FIREBASE_AUTH_ROSTER = [
-  {
-    uid: '2peT1aQW5wgif4yBHGXNOVbLdK82',
-    name: 'NKRK Learner',
-    email: 'nkrk.0107@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'uDmWQ80hOfUyRQUy6kzjxSQgD8n1',
-    name: 'Ayush Kumar',
-    email: 'workwithayush615@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'ES7nLNRObNRnDT5V47veSsB5u2F3',
-    name: 'P.K. Sharma',
-    email: 'pk2014214@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'OtTpsMiYYYYLbFoVddWcd8zZk5c2',
-    name: 'Kashif Raza',
-    email: 'kashifraza898900@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: '8GV1h3oy54YZxeOZ7CyLnygt4Gg1',
-    name: 'S.M. Scholar',
-    email: 'sm3451875@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'DaJnBEfqHKNAKZHOjXLTMlt1Mps1',
-    name: 'Samriddhi Srivastava',
-    email: 'samriddhisri.78@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: '3nqhba1g5thR0y02vvcGrF5bWwG3',
-    name: 'Ripu Kumar',
-    email: 'ripukumar843328@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'vc5zv6UX8JSW96Hcp9uPlYmr4rI2',
-    name: 'Aryan Sharma',
-    email: 'aryansharma6484@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: '0789UtgyfVSiq2kDMeuQpFR3xP52',
-    name: 'A.K. Scholar',
-    email: 'ak9926023023@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'LScF1oWFY5XTltjO0hnJXWMz5d03',
-    name: 'Rishikesh Singh',
-    email: 'rishikeshsingh1123@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'BgrSBIzIR5dV4FLYIPLexudueEk1',
-    name: 'Aditya Gupta',
-    email: 'adityagupta3273@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: '37QnrpXLJ6ZjWdKSAIMOynWw2hS2',
-    name: 'Apekshit Singh',
-    email: 'apekshitsingh90@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'jiYJ1loAmUQQ9BUIEvsQ7JfxO8p1',
-    name: 'Tarun Pal',
-    email: 'tarun.pal05112007@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'ohKIBqoyZuh9w4gIBODUJ72J2X83',
-    name: 'Ayush Jha',
-    email: 'ayushjha12347@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'CNGHzSW7fVsldjiT2kEF4qH5u3y1',
-    name: 'Rohit Kumar Dev',
-    email: 'rohitkumardev777@gmail.com',
-    day1_score: null,
-    day1_passed: false,
-    day1_attempts: 0,
-    day2_score: null,
-    day2_passed: false,
-    day2_attempts: 0,
-    day3_score: null,
-    day3_passed: false,
-    day3_attempts: 0,
-    level0_count: 0,
-    spin_prize: 'Pending',
-    last_active: 'Firebase Auth Registered'
-  },
-  {
-    uid: 'kapil_director_01',
-    name: 'Kapil Narula (Director)',
-    email: 'kapilnarula27july@gmail.com',
-    day1_score: 98,
-    day1_passed: true,
-    day1_attempts: 1,
-    day2_score: 96,
-    day2_passed: true,
-    day2_attempts: 1,
-    day3_score: 94,
-    day3_passed: true,
-    day3_attempts: 1,
-    mock1_score: 96,
-    mock1_passed: true,
-    mock1_attempts: 1,
-    mock2_score: 92,
-    mock2_passed: true,
-    mock2_attempts: 1,
-    mock3_score: 96,
-    mock3_passed: true,
-    mock3_attempts: 1,
-    mock4_score: 100,
-    mock4_passed: true,
-    mock4_attempts: 1,
-    mock5_score: 96,
-    mock5_passed: true,
-    mock5_attempts: 1,
-    level0_count: 25,
-    spin_prize: '+50 XP Boost',
-    last_active: 'Director Lead'
+function getFirebaseAuthRoster() {
+  if (window.FIREBASE_AUTH_ROSTER && Array.isArray(window.FIREBASE_AUTH_ROSTER) && window.FIREBASE_AUTH_ROSTER.length > 0) {
+    return window.FIREBASE_AUTH_ROSTER;
   }
-];
+  return [];
+}
+
 
 // ========================================================
 // AUTOMATIC 5-MINUTE REFRESH ENGINE FOR ADMIN DASHBOARD
@@ -3261,10 +2980,24 @@ async function loadAdminDashboardData() {
     `;
   }
 
-  const learnersMap = new Map();
+  // 1. Attempt dynamic refresh from data/firebase-roster.json if accessible
+  try {
+    const rosterRes = await fetch('./data/firebase-roster.json?t=' + Date.now(), { cache: 'no-store' });
+    if (rosterRes.ok) {
+      const rosterJson = await rosterRes.json();
+      if (Array.isArray(rosterJson) && rosterJson.length > 0) {
+        window.FIREBASE_AUTH_ROSTER = rosterJson;
+      }
+    }
+  } catch (err) {
+    // Graceful fallback to embedded script
+  }
 
-  // 1. Seed with verified Google Firebase Authentication console user roster
-  FIREBASE_AUTH_ROSTER.forEach(item => {
+  const learnersMap = new Map();
+  const baseRoster = getFirebaseAuthRoster();
+
+  // Seed with verified Google Firebase Authentication console user roster (37 verified scholars)
+  baseRoster.forEach(item => {
     learnersMap.set(item.email.toLowerCase(), {
       mock1_score: item.mock1_score ?? null,
       mock1_passed: item.mock1_passed ?? false,
@@ -3590,12 +3323,19 @@ function filterAdminLearnerTable() {
       <tr class="hover:bg-slate-800/40 transition">
         <td class="p-3">
           <div class="flex items-center space-x-2.5">
-            <div class="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 flex items-center justify-center font-bold text-xs uppercase">
-              ${(lrn.name || 'S').charAt(0)}
-            </div>
-            <div>
-              <p class="font-bold text-white text-xs">${escapeHtml(lrn.name)}</p>
-              <p class="text-[10px] text-slate-400">${escapeHtml(lrn.email)}</p>
+            ${lrn.photoUrl ? `
+              <img src="${escapeHtml(lrn.photoUrl)}" alt="${escapeHtml(lrn.name)}" class="w-7 h-7 rounded-full border border-indigo-400 object-cover shrink-0" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+              <div class="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 hidden items-center justify-center font-bold text-xs uppercase shrink-0">
+                ${escapeHtml((lrn.name || 'S').charAt(0))}
+              </div>
+            ` : `
+              <div class="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                ${escapeHtml((lrn.name || 'S').charAt(0))}
+              </div>
+            `}
+            <div class="min-w-0">
+              <p class="font-bold text-white text-xs truncate">${escapeHtml(lrn.name)}</p>
+              <p class="text-[10px] text-slate-400 truncate">${escapeHtml(lrn.email)}</p>
             </div>
           </div>
         </td>
