@@ -678,16 +678,16 @@ function renderFoundationsActiveModule() {
 
   let html = `
     <!-- Module Header Banner -->
-    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-indigo-900/40 space-y-2">
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 md:p-6 shadow-xl border border-indigo-800/60 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-bold flex items-center gap-1.5">
+        <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black flex items-center gap-1.5 shadow-sm">
           <i class="${mod.icon}"></i> ${mod.badge}
         </span>
-        <span class="text-[11px] font-mono text-slate-300">Module ${modIndex + 1} of 5 • 5-MCQ Knowledge Check</span>
+        <span class="text-[11px] font-mono text-slate-200 font-semibold" style="color: #e2e8f0 !important;">Module ${modIndex + 1} of 5 • 5-MCQ Knowledge Check</span>
       </div>
-      <h3 class="text-base md:text-lg font-black text-white">${mod.title}</h3>
-      <p class="text-xs text-amber-200 font-medium">${mod.subtitle}</p>
-      <p class="text-xs text-slate-300 leading-relaxed pt-1">${mod.overview}</p>
+      <h3 class="text-lg md:text-xl font-black text-white tracking-wide" style="color: #ffffff !important;">${mod.title}</h3>
+      <p class="text-xs md:text-sm font-bold text-amber-300" style="color: #fde047 !important;">${mod.subtitle}</p>
+      <p class="text-xs md:text-sm text-slate-100 leading-relaxed pt-1 font-normal" style="color: #f8fafc !important;">${mod.overview}</p>
     </div>
   `;
 
@@ -921,20 +921,22 @@ function renderNotesForDay(dayNum) {
   if (titleEl) titleEl.innerText = data.title;
   if (labelEl) labelEl.innerText = data.duration;
 
-  let html = `<div class="p-3 bg-indigo-950/30 border border-indigo-900/50 rounded-xl text-slate-300 text-xs mb-4">
-    <strong>Module Overview:</strong> ${data.summary}
+  let html = `<div class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-slate-800 text-xs md:text-sm mb-4 leading-relaxed shadow-sm">
+    <strong class="text-indigo-700 font-bold block mb-1"><i class="fa-solid fa-compass mr-1"></i> Module Overview:</strong>
+    <p class="text-slate-700">${data.summary}</p>
   </div>`;
 
   data.sections.forEach(sec => {
     html += `
-      <div class="mb-5 bg-slate-950/40 border border-slate-800/80 rounded-xl p-4">
-        <h4 class="text-sm font-bold text-white mb-1.5 flex items-center gap-2">
-          <i class="fa-solid fa-graduation-cap text-indigo-400"></i> ${sec.heading}
+      <div class="mb-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+        <h4 class="text-sm md:text-base font-extrabold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+          <i class="fa-solid fa-graduation-cap text-indigo-600"></i> ${sec.heading}
         </h4>
-        <div class="p-2.5 bg-amber-500/10 border-l-4 border-amber-500 text-amber-200 text-xs rounded-r-lg mb-3">
-          <strong>💡 Zero-Assumption Analogy:</strong> ${sec.analogy}
+        <div class="p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-950 text-xs md:text-sm rounded-r-xl font-medium leading-relaxed">
+          <strong class="text-amber-800 font-bold block mb-0.5"><i class="fa-solid fa-lightbulb text-amber-600 mr-1"></i> Zero-Assumption Analogy:</strong>
+          <span>${sec.analogy}</span>
         </div>
-        <div class="text-slate-300 text-xs leading-relaxed space-y-2">
+        <div class="text-slate-700 text-xs md:text-sm leading-relaxed space-y-2">
           ${sec.content}
         </div>
       </div>
@@ -955,14 +957,14 @@ function renderPreAssessmentForDay(dayNum) {
   data.preAssessment.forEach((item, idx) => {
     html += `
       <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2.5">
-        <p class="text-xs font-semibold text-white">${idx + 1}. ${item.q}</p>
+        <p class="text-xs md:text-sm font-bold text-white" style="color: #ffffff !important;">${idx + 1}. ${item.q}</p>
         <div class="space-y-1.5">
     `;
     item.opts.forEach((opt, oIdx) => {
       html += `
-        <label class="flex items-center space-x-2 text-xs text-slate-300 p-2 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-slate-800">
+        <label class="flex items-center space-x-2 text-xs text-slate-200 p-2.5 rounded-lg hover:bg-slate-900 cursor-pointer border border-transparent hover:border-slate-800 transition">
           <input type="radio" name="pretest_${idx}" value="${oIdx}" class="text-indigo-600 focus:ring-0">
-          <span>${opt}</span>
+          <span style="color: #e2e8f0 !important;">${opt}</span>
         </label>
       `;
     });
@@ -1156,9 +1158,9 @@ function renderJavaDsaList() {
         <div class="space-y-1 pr-2">
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="text-[9px] font-mono px-1.5 py-0.5 rounded border ${diffBadge} font-bold">${p.difficulty}</span>
-            <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(p.category)}</span>
+            <span class="text-[10px] text-slate-300 font-mono font-medium">${escapeHtml(p.category)}</span>
           </div>
-          <h4 class="text-xs font-bold text-white">${escapeHtml(p.title)}</h4>
+          <h4 class="text-xs font-bold text-white" style="color: #ffffff !important;">${escapeHtml(p.title)}</h4>
         </div>
         <i class="fa-solid fa-chevron-right text-xs ${isSelected ? 'text-orange-400' : 'text-slate-600'}"></i>
       </div>
@@ -1359,7 +1361,7 @@ function renderDbmsWordExerciseList() {
               <i class="${isDbms ? 'fa-solid fa-database' : 'fa-solid fa-file-word'} mr-1"></i> ${e.category}
             </span>
           </div>
-          <h4 class="text-xs font-bold text-white">${escapeHtml(e.title)}</h4>
+          <h4 class="text-xs font-bold text-white" style="color: #ffffff !important;">${escapeHtml(e.title)}</h4>
         </div>
         <i class="fa-solid fa-chevron-right text-xs ${isSelected ? 'text-cyan-400' : 'text-slate-600'}"></i>
       </div>
@@ -2313,10 +2315,10 @@ function renderExamQuestion(idx) {
   q.opts.forEach((opt, oIdx) => {
     const isSelected = userExamAnswers[idx] === oIdx;
     const btn = document.createElement('button');
-    btn.className = `w-full text-left p-3 rounded-xl border text-xs transition flex items-center gap-3 ${
+    btn.className = `w-full text-left p-3.5 rounded-xl border text-xs md:text-sm transition flex items-center gap-3 ${
       isSelected 
-        ? "border-indigo-500 bg-indigo-950/40 text-indigo-200 font-semibold shadow" 
-        : "border-slate-800 bg-slate-900/60 hover:bg-slate-800/80 text-slate-300"
+        ? "border-indigo-500 bg-indigo-600 text-white font-bold shadow-md" 
+        : "border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-white"
     }`;
     btn.onclick = () => {
       userExamAnswers[idx] = oIdx;
@@ -2324,10 +2326,10 @@ function renderExamQuestion(idx) {
       renderExamPalette();
     };
     btn.innerHTML = `
-      <span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-[10px] font-mono shrink-0">
+      <span class="w-6 h-6 rounded-full border ${isSelected ? 'border-white bg-white/20 text-white' : 'border-slate-700 bg-slate-800 text-slate-300'} flex items-center justify-center text-[10px] font-mono shrink-0 font-bold">
         ${String.fromCharCode(65 + oIdx)}
       </span>
-      <span>${opt}</span>
+      <span class="${isSelected ? 'text-white font-semibold' : 'text-slate-100'}">${opt}</span>
     `;
     optsContainer.appendChild(btn);
   });
@@ -2630,8 +2632,8 @@ function renderMockSeriesCards() {
               <i class="fa-solid ${domainIcons[id] || 'fa-graduation-cap'}"></i>
             </div>
             <div>
-              <h4 class="text-xs font-bold text-white leading-snug">${escapeHtml(data.title.replace(/^Mock Assessment \d+:\s*/, ''))}</h4>
-              <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${escapeHtml(data.desc)}</p>
+              <h4 class="text-xs font-bold text-white leading-snug" style="color: #ffffff !important;">${escapeHtml(data.title.replace(/^Mock Assessment \d+:\s*/, ''))}</h4>
+              <p class="text-[11px] text-slate-300 mt-1 line-clamp-2" style="color: #cbd5e1 !important;">${escapeHtml(data.desc)}</p>
             </div>
           </div>
           <div class="p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between">
@@ -2752,16 +2754,16 @@ function renderMockQuestionsList() {
       return `
         <label onclick="selectMockAnswer(${qIdx}, ${optIdx})" class="p-3 rounded-xl border transition flex items-center space-x-3 cursor-pointer ${
           isSelected 
-            ? 'bg-teal-500/15 border-teal-500 text-white font-medium shadow-md' 
-            : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900'
+            ? 'bg-teal-500/20 border-teal-500 text-white font-bold shadow-md' 
+            : 'bg-slate-900/80 border-slate-800 text-slate-200 hover:border-slate-700 hover:bg-slate-900'
         }" id="mock_opt_label_${qIdx}_${optIdx}">
           <input type="radio" name="mock_q_${qIdx}" value="${optIdx}" ${isSelected ? 'checked' : ''} class="hidden">
           <span class="w-6 h-6 rounded-md flex items-center justify-center font-mono font-bold text-xs ${
-            isSelected ? 'bg-teal-500 text-slate-950 font-black' : 'bg-slate-800 text-slate-400'
+            isSelected ? 'bg-teal-400 text-slate-950 font-black' : 'bg-slate-800 text-slate-300'
           }" id="mock_opt_badge_${qIdx}_${optIdx}">
             ${letters[optIdx]}
           </span>
-          <span class="text-xs leading-relaxed flex-1">${escapeHtml(opt)}</span>
+          <span class="text-xs md:text-sm leading-relaxed flex-1 ${isSelected ? 'text-white font-bold' : 'text-slate-100'}">${escapeHtml(opt)}</span>
         </label>
       `;
     }).join('');
@@ -2770,9 +2772,9 @@ function renderMockQuestionsList() {
       <div id="mock_question_card_${qIdx}" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 md:p-5 space-y-3 shadow-lg">
         <div class="flex items-center justify-between border-b border-slate-900 pb-2">
           <span class="text-[10px] font-mono text-teal-400 uppercase font-bold tracking-wider">Question ${qIdx + 1} of ${activeMockQuestions.length}</span>
-          <span class="text-[10px] font-mono text-slate-500 px-2 py-0.5 rounded bg-slate-900">${escapeHtml(q.topic || 'General')}</span>
+          <span class="text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded bg-slate-900">${escapeHtml(q.topic || 'General')}</span>
         </div>
-        <p class="text-xs md:text-sm font-semibold text-white leading-relaxed">${escapeHtml(q.q)}</p>
+        <p class="text-xs md:text-sm font-bold text-white leading-relaxed" style="color: #ffffff !important;">${escapeHtml(q.q)}</p>
         <div class="space-y-2 pt-1">
           ${optionsHtml}
         </div>
@@ -2929,7 +2931,7 @@ function renderMockResultView(score, total, percentage, isPassed, attempts) {
             </span>
             <span class="text-[10px] text-slate-500 font-mono">Q${idx + 1} • ${escapeHtml(q.topic)}</span>
           </div>
-          <p class="text-xs font-semibold text-white leading-relaxed">${escapeHtml(q.q)}</p>
+          <p class="text-xs md:text-sm font-bold text-white leading-relaxed" style="color: #ffffff !important;">${escapeHtml(q.q)}</p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
             <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">

@@ -163,42 +163,393 @@ body.festive-light {
   background: #94a3b8;
 }
 
-/* Festive Light Mode Workspace Enforcements */
-body.festive-light #mainViewArea .bg-slate-900:not(.keep-dark):not(pre):not(code),
-body.festive-light #mainViewArea .bg-slate-950:not(.keep-dark):not(pre):not(code) {
-  background-color: #ffffff;
-  color: #0f172a;
+/* ========================================================
+   FESTIVE HIGH-CONTRAST TYPOGRAPHY & SURFACE ARCHITECTURE
+   Guarantees 100% crystal-clear readability across all dark
+   backgrounds, code editors, terminals, modals & light surfaces.
+   ======================================================== */
+
+/* 1. ABSOLUTE GLOBAL RULE: text-white is ALWAYS pure white */
+.text-white,
+[class*="text-white"],
+body.festive-light .text-white,
+body.festive-light [class*="text-white"] {
+  color: #ffffff !important;
 }
 
-body.festive-light #mainViewArea .border-slate-800:not(.keep-dark),
-body.festive-light #mainViewArea .border-slate-700:not(.keep-dark) {
-  border-color: #e2e8f0;
+/* 2. Preserve White Text on all Colored Badges, Pills & Action Buttons */
+body.festive-light .bg-indigo-600,
+body.festive-light .bg-indigo-700,
+body.festive-light .bg-emerald-600,
+body.festive-light .bg-emerald-700,
+body.festive-light .bg-rose-600,
+body.festive-light .bg-rose-700,
+body.festive-light .bg-teal-600,
+body.festive-light .bg-teal-700,
+body.festive-light .bg-orange-600,
+body.festive-light .bg-orange-700,
+body.festive-light .bg-amber-600,
+body.festive-light .bg-sky-600,
+body.festive-light button.rainbow-gradient-bg,
+body.festive-light .rainbow-gradient-bg,
+body.festive-light .navratri-banner {
+  color: #ffffff !important;
 }
 
-body.festive-light #mainViewArea .text-slate-400 {
-  color: #64748b;
+/* 3. COMPREHENSIVE DARK CONTAINER TYPOGRAPHY ENFORCEMENT
+   Applies to every dark gradient, slate, navy, terminal, modal & IDE */
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-indigo-9"],
+  [class*="from-gray-9"],
+  [class*="via-indigo-9"],
+  [class*="via-slate-9"],
+  [class*="to-indigo-9"],
+  [class*="to-slate-9"],
+  .bg-\[\#0b0f19\],
+  .bg-\[\#172033\],
+  .bg-black,
+  .bg-gray-900,
+  .bg-gray-950,
+  .dark-card,
+  .keep-dark,
+  #appSidebar,
+  #adminDashboardScreen,
+  #adminLoginModal,
+  #founderNoteModal,
+  #loginGateScreen,
+  #tabContentLevel0,
+  #tabContentPretest,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) {
+  color: #f1f5f9;
 }
 
-body.festive-light #mainViewArea .text-slate-300 {
-  color: #334155;
+/* Headings inside any dark container */
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-indigo-9"],
+  [class*="from-gray-9"],
+  [class*="via-indigo-9"],
+  [class*="via-slate-9"],
+  [class*="to-indigo-9"],
+  [class*="to-slate-9"],
+  .bg-\[\#0b0f19\],
+  .bg-\[\#172033\],
+  .bg-black,
+  .bg-gray-900,
+  .bg-gray-950,
+  .dark-card,
+  .keep-dark,
+  #appSidebar,
+  #adminDashboardScreen,
+  #adminLoginModal,
+  #founderNoteModal,
+  #loginGateScreen,
+  #tabContentLevel0,
+  #tabContentPretest,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) :is(h1, h2, h3, h4, h5, h6):not(.rainbow-text):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-sky"]):not([class*="text-teal"]):not([class*="text-orange"]):not([class*="text-indigo"]) {
+  color: #ffffff !important;
 }
 
-body.festive-light #mainViewArea .text-slate-200 {
+/* Specific text tints inside dark surfaces */
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-indigo-9"],
+  [class*="from-gray-9"],
+  [class*="via-indigo-9"],
+  [class*="via-slate-9"],
+  [class*="to-indigo-9"],
+  [class*="to-slate-9"],
+  .bg-\[\#0b0f19\],
+  .bg-\[\#172033\],
+  .bg-black,
+  .bg-gray-900,
+  .bg-gray-950,
+  .dark-card,
+  .keep-dark,
+  #appSidebar,
+  #adminDashboardScreen,
+  #adminLoginModal,
+  #founderNoteModal,
+  #loginGateScreen,
+  #tabContentLevel0,
+  #tabContentPretest,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) .text-slate-100 {
+  color: #f1f5f9 !important;
+}
+
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-indigo-9"],
+  [class*="from-gray-9"],
+  [class*="via-indigo-9"],
+  [class*="via-slate-9"],
+  [class*="to-indigo-9"],
+  [class*="to-slate-9"],
+  .bg-\[\#0b0f19\],
+  .bg-\[\#172033\],
+  .bg-black,
+  .bg-gray-900,
+  .bg-gray-950,
+  .dark-card,
+  .keep-dark,
+  #appSidebar,
+  #adminDashboardScreen,
+  #adminLoginModal,
+  #founderNoteModal,
+  #loginGateScreen,
+  #tabContentLevel0,
+  #tabContentPretest,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) .text-slate-200 {
+  color: #e2e8f0 !important;
+}
+
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-indigo-9"],
+  [class*="from-gray-9"],
+  [class*="via-indigo-9"],
+  [class*="via-slate-9"],
+  [class*="to-indigo-9"],
+  [class*="to-slate-9"],
+  .bg-\[\#0b0f19\],
+  .bg-\[\#172033\],
+  .bg-black,
+  .bg-gray-900,
+  .bg-gray-950,
+  .dark-card,
+  .keep-dark,
+  #appSidebar,
+  #adminDashboardScreen,
+  #adminLoginModal,
+  #founderNoteModal,
+  #loginGateScreen,
+  #tabContentLevel0,
+  #tabContentPretest,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-indigo-9"],
+  [class*="from-gray-9"],
+  [class*="via-indigo-9"],
+  [class*="via-slate-9"],
+  [class*="to-indigo-9"],
+  [class*="to-slate-9"],
+  .bg-\[\#0b0f19\],
+  .bg-\[\#172033\],
+  .bg-black,
+  .bg-gray-900,
+  .bg-gray-950,
+  .dark-card,
+  .keep-dark,
+  #appSidebar,
+  #adminDashboardScreen,
+  #adminLoginModal,
+  #founderNoteModal,
+  #loginGateScreen,
+  #tabContentLevel0,
+  #tabContentPretest,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Inputs, Textareas, Selects & Placeholders in Dark Surfaces */
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-indigo-9"],
+  .dark-card,
+  .keep-dark,
+  #tabContentLevel0,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #adminDashboardScreen,
+  #adminLoginModal
+) input:not([type="checkbox"]):not([type="radio"]),
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-indigo-9"],
+  .dark-card,
+  .keep-dark,
+  #tabContentLevel0,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #adminDashboardScreen,
+  #adminLoginModal
+) textarea,
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-indigo-9"],
+  .dark-card,
+  .keep-dark,
+  #tabContentLevel0,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #adminDashboardScreen,
+  #adminLoginModal
+) select {
+  color: #ffffff !important;
+}
+
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-indigo-9"],
+  .dark-card,
+  .keep-dark,
+  #tabContentLevel0,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #adminDashboardScreen,
+  #adminLoginModal
+) select option {
+  background-color: #0b0f19 !important;
+  color: #ffffff !important;
+}
+
+/* Secondary dark buttons */
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-indigo-9"],
+  .dark-card,
+  .keep-dark,
+  #tabContentLevel0,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) .bg-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+:is(
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"],
+  [class*="bg-indigo-9"],
+  [class*="from-slate-9"],
+  [class*="from-indigo-9"],
+  .dark-card,
+  .keep-dark,
+  #tabContentLevel0,
+  #tabContentIde,
+  #tabContentJavadsa,
+  #tabContentDbmsword,
+  #tabContentAssessment,
+  #tabContentMocktests
+) .bg-slate-800:hover {
+  color: #ffffff !important;
+  background-color: #334155 !important;
+}
+
+/* 4. Code Blocks, Terminals & Execution Consoles */
+pre,
+code,
+#codeTerminalOutput,
+#codeEditorInput,
+#level0LiveOutput,
+#level0CodeSnippetBox,
+#javaDsaCodeBox {
+  background-color: #020617 !important;
+  border-color: #1e293b !important;
+}
+
+#codeTerminalOutput,
+#level0LiveOutput {
+  color: #f8fafc !important;
+}
+
+#codeEditorInput,
+#level0CodeSnippetBox,
+#javaDsaCodeBox {
+  color: #34d399 !important;
+}
+
+/* 5. LIGHT MODE SURFACES (Cards with white / light background) */
+body.festive-light .bg-white:not(:is([class*="from-slate-9"], [class*="from-indigo-9"])),
+body.festive-light .bg-slate-50:not(:is([class*="from-slate-9"], [class*="from-indigo-9"])) {
   color: #1e293b;
 }
 
-body.festive-light #mainViewArea h1.text-white,
-body.festive-light #mainViewArea h2.text-white,
-body.festive-light #mainViewArea h3.text-white,
-body.festive-light #mainViewArea h4.text-white {
+body.festive-light .bg-white h1:not(.rainbow-text):not(.text-white):not([class*="text-amber"]):not([class*="text-indigo"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-teal"]):not([class*="text-orange"]):not([class*="text-sky"]),
+body.festive-light .bg-white h2:not(.rainbow-text):not(.text-white):not([class*="text-amber"]):not([class*="text-indigo"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-teal"]):not([class*="text-orange"]):not([class*="text-sky"]),
+body.festive-light .bg-white h3:not(.rainbow-text):not(.text-white):not([class*="text-amber"]):not([class*="text-indigo"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-teal"]):not([class*="text-orange"]):not([class*="text-sky"]),
+body.festive-light .bg-white h4:not(.rainbow-text):not(.text-white):not([class*="text-amber"]):not([class*="text-indigo"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-teal"]):not([class*="text-orange"]):not([class*="text-sky"]),
+body.festive-light .bg-white h5:not(.rainbow-text):not(.text-white):not([class*="text-amber"]):not([class*="text-indigo"]):not([class*="text-emerald"]):not([class*="text-rose"]):not([class*="text-teal"]):not([class*="text-orange"]):not([class*="text-sky"]) {
   color: #0f172a;
 }
 
-/* Preserve white text for colorful CTA buttons */
-body.festive-light #mainViewArea .bg-indigo-600,
-body.festive-light #mainViewArea .bg-emerald-600,
-body.festive-light #mainViewArea .bg-rose-600,
-body.festive-light #mainViewArea .bg-teal-600,
-body.festive-light #mainViewArea button.rainbow-gradient-bg {
-  color: #ffffff !important;
-}
