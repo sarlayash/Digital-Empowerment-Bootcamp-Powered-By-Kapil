@@ -300,9 +300,10 @@
   <!-- Mobile Bottom Quick Navigation -->
   <div id="mobileBottomNav" class="hidden md:hidden flex border-b border-slate-800 bg-slate-900 px-2 py-1.5 overflow-x-auto text-[11px] gap-2">
     <button onclick="switchTab('notes')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Notes</button>
+    <button onclick="switchTab('javadsa')" class="px-2.5 py-1 rounded bg-slate-800 text-orange-400 font-bold whitespace-nowrap"><i class="fa-brands fa-java mr-1"></i>Java DSA (25)</button>
+    <button onclick="switchTab('dbmsword')" class="px-2.5 py-1 rounded bg-slate-800 text-cyan-300 font-bold whitespace-nowrap"><i class="fa-solid fa-laptop-code mr-1"></i>10 IDE Labs</button>
     <button onclick="switchTab('level0')" class="px-2.5 py-1 rounded bg-slate-800 text-amber-300 font-bold whitespace-nowrap"><i class="fa-solid fa-microchip mr-1"></i>Level 0 (25 Ex)</button>
     <button onclick="switchTab('mocktests')" class="px-2.5 py-1 rounded bg-slate-800 text-teal-300 font-bold whitespace-nowrap"><i class="fa-solid fa-graduation-cap mr-1"></i>5 Mocks (25 Qs)</button>
-    <button onclick="switchTab('pretest')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Pre-Test</button>
     <button onclick="switchTab('ide')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Cloud IDE</button>
     <button onclick="switchTab('assessment')" class="px-2.5 py-1 rounded bg-indigo-600 text-white font-bold whitespace-nowrap">100 Qs Mock</button>
     <button onclick="switchTab('credentials')" class="px-2.5 py-1 rounded bg-slate-800 text-slate-200 whitespace-nowrap">Badges</button>
@@ -393,11 +394,17 @@
         <button onclick="switchTab('notes')" id="tabBtnNotes" class="px-3 md:px-4 py-2.5 border-b-2 border-indigo-500 text-indigo-400 font-bold flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-book-open"></i> Zero-Assumption Notes
         </button>
+        <button onclick="switchTab('javadsa')" id="tabBtnJavadsa" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-brands fa-java text-orange-400"></i> Java DSA (25 Progs)
+        </button>
+        <button onclick="switchTab('dbmsword')" id="tabBtnDbmsword" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-laptop-code text-cyan-400"></i> 10 IDE Labs (DBMS & Word)
+        </button>
         <button onclick="switchTab('level0')" id="tabBtnLevel0" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-microchip text-amber-400"></i> Level 0 Lab (25 Ex)
         </button>
         <button onclick="switchTab('mocktests')" id="tabBtnMocktests" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
-          <i class="fa-solid fa-graduation-cap text-teal-400"></i> 5 Mocks (25 Qs Each)
+          <i class="fa-solid fa-graduation-cap text-teal-400"></i> 5 Mocks (25 Qs)
         </button>
         <button onclick="switchTab('pretest')" id="tabBtnPretest" class="px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-list-check"></i> Diagnostic Pre-Test
@@ -554,32 +561,144 @@
       <!-- TAB 3: IN-BROWSER CLOUD IDE & SANDBOX -->
       <div id="tabContentIde" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <div class="flex items-center space-x-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
               <i class="fa-solid fa-terminal text-emerald-400"></i> Zero-Install Cloud Sandbox:
             </span>
             <select id="ideLanguageSelector" class="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1 focus:outline-none">
               <option value="c">C Language (GCC/Wasm Compiler)</option>
+              <option value="java">Java 21 DSA (OpenJDK JVM Engine)</option>
               <option value="sql">RDBMS & SQL (SQLite In-Memory)</option>
               <option value="web">Web Sandbox (HTML + CSS + JS)</option>
               <option value="word">MS-Word Document Processor</option>
               <option value="excel">MS-Excel Computation Engine</option>
             </select>
+            <!-- Preset Exercise / DSA Program Selector -->
+            <select id="ideExercisePresetSelector" onchange="loadIdePresetFromDropdown()" class="bg-slate-800 border border-slate-700 text-xs text-amber-300 rounded-lg px-2.5 py-1 focus:outline-none max-w-xs">
+              <option value="">-- Load Solved Preset / Exercise --</option>
+            </select>
           </div>
-          <button onclick="runIdeCode()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
-            <i class="fa-solid fa-play text-[10px]"></i> Run / Compile Code
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="loadIdeLanguageTemplate()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left text-[10px]"></i> Reset
+            </button>
+            <button onclick="runIdeCode()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
+              <i class="fa-solid fa-play text-[10px]"></i> Run / Compile Code
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div class="space-y-1">
-            <span class="text-[11px] text-slate-400 font-mono">Source Code Editor</span>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-slate-400 font-mono">Source Code Editor</span>
+              <span id="ideCurrentStatusBadge" class="text-[10px] text-indigo-400 font-mono">Ready to edit</span>
+            </div>
             <textarea id="codeEditorInput" class="w-full h-80 bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-emerald-400 focus:outline-none focus:border-indigo-500" spellcheck="false"></textarea>
           </div>
           <div class="space-y-1">
-            <span class="text-[11px] text-slate-400 font-mono">Live Execution / Sandbox View</span>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-slate-400 font-mono">Live Execution / Sandbox View</span>
+              <span class="text-[10px] text-slate-500 font-mono">WASM / In-Browser Runtime</span>
+            </div>
             <div id="codeTerminalOutput" class="w-full h-80 bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-slate-200 overflow-y-auto whitespace-pre-wrap">Click 'Run / Compile Code' to execute directly in browser...</div>
             <iframe id="webPreviewFrame" class="hidden w-full h-80 bg-white rounded-xl border border-slate-800"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: 25 JAVA DSA SOLVED PROGRAMS HUB -->
+      <div id="tabContentJavadsa" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold">
+                <i class="fa-brands fa-java mr-1"></i> Java 21 DSA Hub
+              </span>
+              <span class="text-xs text-slate-400 font-mono">25 Solved Programs • With In-Browser IDE</span>
+            </div>
+            <h2 class="text-base md:text-xl font-extrabold text-white mt-1">25 Data Structures & Algorithms Programs in Java</h2>
+            <p class="text-xs text-slate-400">Complete runnable code, optimal time/space complexity, intuition walkthroughs, and instant cloud execution.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="switchTab('ide')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs rounded-xl border border-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-code text-emerald-400"></i> Open Cloud IDE
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Filter Pills & Search -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="javaCategoryPills">
+            <button onclick="filterJavaDsa('all')" id="javaPill_all" class="px-2.5 py-1 rounded-lg bg-orange-600 text-white font-bold whitespace-nowrap">All (25)</button>
+            <button onclick="filterJavaDsa('Arrays & Hashing')" id="javaPill_Arrays" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">Arrays (5)</button>
+            <button onclick="filterJavaDsa('Strings')" id="javaPill_Strings" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">Strings (4)</button>
+            <button onclick="filterJavaDsa('Searching & Sorting')" id="javaPill_Searching" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">Search & Sort (4)</button>
+            <button onclick="filterJavaDsa('Linked Lists')" id="javaPill_LinkedLists" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">Linked Lists (4)</button>
+            <button onclick="filterJavaDsa('Stacks & Queues')" id="javaPill_Stacks" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">Stacks & Queues (3)</button>
+            <button onclick="filterJavaDsa('Trees')" id="javaPill_Trees" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">Trees (3)</button>
+            <button onclick="filterJavaDsa('Dynamic Programming')" id="javaPill_DP" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">DP (1)</button>
+            <button onclick="filterJavaDsa('Graphs')" id="javaPill_Graphs" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap">Graphs (1)</button>
+          </div>
+          <div class="relative w-full sm:w-56 shrink-0">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+            <input type="text" id="javaDsaSearchInput" oninput="searchJavaDsa()" placeholder="Search DSA problem..." class="w-full bg-slate-950 border border-slate-800 text-xs text-white rounded-xl pl-8 pr-3 py-1.5 focus:outline-none focus:border-orange-500 font-sans">
+          </div>
+        </div>
+
+        <!-- Two Column Interactive Explorer -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <!-- Left: Program List (5 cols) -->
+          <div class="lg:col-span-5 bg-slate-950/70 border border-slate-800 rounded-2xl p-3 space-y-2 max-h-[700px] overflow-y-auto" id="javaDsaProgramList">
+            <!-- Injected by app.js -->
+          </div>
+
+          <!-- Right: Active Solved Program Card (7 cols) -->
+          <div class="lg:col-span-7 space-y-4" id="javaDsaActiveContainer">
+            <!-- Injected by app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: 10 APPLIED DBMS & MS-WORD IDE LABS -->
+      <div id="tabContentDbmsword" class="hidden bg-slate-900 border border-slate-800 rounded-b-2xl p-4 md:p-6 space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold">
+                <i class="fa-solid fa-laptop-code mr-1"></i> Applied IDE Labs
+              </span>
+              <span class="text-xs text-slate-400 font-mono">10 Interactive Exercises (5 DBMS + 5 MS-Word)</span>
+            </div>
+            <h2 class="text-base md:text-xl font-extrabold text-white mt-1">10 Hands-on DBMS & MS-Word IDE Exercises</h2>
+            <p class="text-xs text-slate-400">Interactive live simulations, architectural insights, SQL statements, and one-click execution in Cloud IDE.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono text-cyan-300 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl">
+              <i class="fa-solid fa-database text-sky-400 mr-1"></i> 5 SQL • <i class="fa-solid fa-file-word text-indigo-400 ml-1 mr-1"></i> 5 Word
+            </span>
+          </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="flex items-center gap-2 text-xs">
+          <button onclick="filterDbmsWord('all')" id="dbmsWordPill_all" class="px-3 py-1 rounded-lg bg-cyan-600 text-white font-bold">All 10 Labs</button>
+          <button onclick="filterDbmsWord('DBMS & SQL')" id="dbmsWordPill_dbms" class="px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white">5 DBMS & SQL</button>
+          <button onclick="filterDbmsWord('MS-Word')" id="dbmsWordPill_word" class="px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white">5 MS-Word</button>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <!-- Left: List of 10 Exercises (5 cols) -->
+          <div class="lg:col-span-5 bg-slate-950/70 border border-slate-800 rounded-2xl p-3 space-y-2 max-h-[650px] overflow-y-auto" id="dbmsWordExerciseList">
+            <!-- Injected by app.js -->
+          </div>
+
+          <!-- Right: Active Exercise Workspace (7 cols) -->
+          <div class="lg:col-span-7 space-y-4" id="dbmsWordActiveContainer">
+            <!-- Injected by app.js -->
           </div>
         </div>
       </div>
@@ -1224,6 +1343,8 @@
   <!-- Application Logic Scripts -->
   <script src="./js/questions-data.js"></script>
   <script src="./js/mock-assessments-data.js"></script>
+  <script src="./js/java-dsa-data.js"></script>
+  <script src="./js/dbms-word-exercises.js"></script>
   <script src="./js/notes-data.js"></script>
   <script src="./js/level0-exercises.js"></script>
   <script src="./js/ide-engine.js"></script>

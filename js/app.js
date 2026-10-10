@@ -451,7 +451,7 @@ function selectDay(dayNum) {
 
 function switchTab(tabId) {
   currentTab = tabId;
-  const tabs = ['notes', 'level0', 'mocktests', 'pretest', 'ide', 'assessment', 'credentials'];
+  const tabs = ['notes', 'javadsa', 'dbmsword', 'level0', 'mocktests', 'pretest', 'ide', 'assessment', 'credentials'];
 
   tabs.forEach(t => {
     const content = document.getElementById('tabContent' + capitalize(t));
@@ -472,6 +472,10 @@ function switchTab(tabId) {
 
   if (tabId === 'ide') {
     loadIdeLanguageTemplate();
+  } else if (tabId === 'javadsa') {
+    renderJavaDsaList();
+  } else if (tabId === 'dbmsword') {
+    initDbmsWordLab();
   } else if (tabId === 'level0') {
     renderCurrentLevel0Exercise();
   } else if (tabId === 'mocktests') {
@@ -581,13 +585,83 @@ function setupIde() {
   if (selector) {
     selector.addEventListener('change', loadIdeLanguageTemplate);
   }
+  populateIdePresetsDropdown();
+}
+
+function populateIdePresetsDropdown() {
+  const select = document.getElementById('ideExercisePresetSelector');
+  if (!select) return;
+
+  select.innerHTML = '<option value="">-- Load Solved Preset / Exercise --</option>';
+
+  // Java DSA Group
+  if (typeof JAVA_DSA_PROGRAMS !== 'undefined') {
+    const javaGroup = document.createElement('optgroup');
+    javaGroup.label = '25 Java DSA Programs';
+    JAVA_DSA_PROGRAMS.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = `java_${p.id}`;
+      opt.innerText = `Java: ${p.title}`;
+      javaGroup.appendChild(opt);
+    });
+    select.appendChild(javaGroup);
+  }
+
+  // DBMS & Word Group
+  if (typeof DBMS_WORD_EXERCISES !== 'undefined') {
+    const dbmsGroup = document.createElement('optgroup');
+    dbmsGroup.label = '10 DBMS & MS-Word Labs';
+    DBMS_WORD_EXERCISES.forEach(ex => {
+      const opt = document.createElement('option');
+      opt.value = `dbmsword_${ex.id}`;
+      opt.innerText = `${ex.category}: ${ex.title}`;
+      dbmsGroup.appendChild(opt);
+    });
+    select.appendChild(dbmsGroup);
+  }
+}
+
+function loadIdePresetFromDropdown() {
+  const select = document.getElementById('ideExercisePresetSelector');
+  if (!select || !select.value) return;
+  const val = select.value;
+
+  if (val.startsWith('java_')) {
+    const id = parseInt(val.replace('java_', ''), 10);
+    const prog = (typeof JAVA_DSA_PROGRAMS !== 'undefined') ? JAVA_DSA_PROGRAMS.find(p => p.id === id) : null;
+    if (prog) {
+      const langSel = document.getElementById('ideLanguageSelector');
+      const editor = document.getElementById('codeEditorInput');
+      const status = document.getElementById('ideCurrentStatusBadge');
+      if (langSel) langSel.value = 'java';
+      if (editor) editor.value = prog.code;
+      if (status) status.innerText = `Loaded: ${prog.title}`;
+      const terminal = document.getElementById('codeTerminalOutput');
+      if (terminal) terminal.innerText = `// Loaded ${prog.title}\n// Ready to compile! Click 'Run / Compile Code' above.\n`;
+    }
+  } else if (val.startsWith('dbmsword_')) {
+    const id = parseInt(val.replace('dbmsword_', ''), 10);
+    const ex = (typeof DBMS_WORD_EXERCISES !== 'undefined') ? DBMS_WORD_EXERCISES.find(e => e.id === id) : null;
+    if (ex) {
+      const langSel = document.getElementById('ideLanguageSelector');
+      const editor = document.getElementById('codeEditorInput');
+      const status = document.getElementById('ideCurrentStatusBadge');
+      if (langSel) langSel.value = ex.category === 'MS-Word' ? 'word' : 'sql';
+      if (editor) editor.value = ex.codeSnippet;
+      if (status) status.innerText = `Loaded: ${ex.title}`;
+      const terminal = document.getElementById('codeTerminalOutput');
+      if (terminal) terminal.innerText = `// Loaded ${ex.title}\n// Ready to execute in sandbox! Click 'Run / Compile Code' above.\n`;
+    }
+  }
 }
 
 function loadIdeLanguageTemplate() {
   const lang = document.getElementById('ideLanguageSelector').value;
   const editor = document.getElementById('codeEditorInput');
+  const status = document.getElementById('ideCurrentStatusBadge');
   if (editor && IDE_ENGINE.templates[lang]) {
     editor.value = IDE_ENGINE.templates[lang];
+    if (status) status.innerText = `Template: ${lang.toUpperCase()}`;
   }
 }
 
@@ -612,6 +686,426 @@ function runIdeCode() {
       terminal.innerText = IDE_ENGINE.runCode(lang, code);
     }
   }, 350);
+}
+
+// ========================================================
+// 6C. 25 JAVA DSA SOLVED PROGRAMS CONTROLLER
+// ========================================================
+let currentJavaDsaId = 1;
+let currentJavaCategory = 'all';
+let currentJavaSearchTerm = '';
+
+function renderJavaDsaList() {
+  const listContainer = document.getElementById('javaDsaProgramList');
+  if (!listContainer || typeof JAVA_DSA_PROGRAMS === 'undefined') return;
+
+  const term = (currentJavaSearchTerm || '').toLowerCase().trim();
+
+  const filtered = JAVA_DSA_PROGRAMS.filter(p => {
+    const matchCat = currentJavaCategory === 'all' || p.category.toLowerCase().includes(currentJavaCategory.toLowerCase());
+    const matchSearch = !term || p.title.toLowerCase().includes(term) || p.category.toLowerCase().includes(term) || (p.tags && p.tags.some(t => t.toLowerCase().includes(term)));
+    return matchCat && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    listContainer.innerHTML = `
+      <div class="p-6 text-center text-slate-500 text-xs">
+        <i class="fa-solid fa-magnifying-glass mb-2 text-lg block"></i>
+        No Java DSA programs match your search.
+      </div>
+    `;
+    return;
+  }
+
+  if (!filtered.some(p => p.id === currentJavaDsaId)) {
+    currentJavaDsaId = filtered[0].id;
+  }
+
+  listContainer.innerHTML = filtered.map(p => {
+    const isSelected = p.id === currentJavaDsaId;
+    const diffBadge = p.difficulty === 'Easy'
+      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+      : p.difficulty === 'Medium'
+      ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+      : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+
+    return `
+      <div onclick="selectJavaDsaProgram(${p.id})" class="p-3 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+        isSelected
+          ? 'bg-orange-950/30 border-orange-500 shadow-md ring-1 ring-orange-500/50'
+          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+      }">
+        <div class="space-y-1 pr-2">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded border ${diffBadge} font-bold">${p.difficulty}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(p.category)}</span>
+          </div>
+          <h4 class="text-xs font-bold text-white">${escapeHtml(p.title)}</h4>
+        </div>
+        <i class="fa-solid fa-chevron-right text-xs ${isSelected ? 'text-orange-400' : 'text-slate-600'}"></i>
+      </div>
+    `;
+  }).join('');
+
+  renderCurrentJavaDsaProgram();
+}
+
+function selectJavaDsaProgram(id) {
+  currentJavaDsaId = id;
+  renderJavaDsaList();
+}
+
+function renderCurrentJavaDsaProgram() {
+  const container = document.getElementById('javaDsaActiveContainer');
+  if (!container || typeof JAVA_DSA_PROGRAMS === 'undefined') return;
+
+  const prog = JAVA_DSA_PROGRAMS.find(p => p.id === currentJavaDsaId) || JAVA_DSA_PROGRAMS[0];
+  if (!prog) return;
+
+  const diffBadge = prog.difficulty === 'Easy'
+    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+    : prog.difficulty === 'Medium'
+    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+    : 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+
+  container.innerHTML = `
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded border ${diffBadge}">${prog.difficulty}</span>
+          <span class="text-xs font-mono text-orange-400 bg-orange-950/40 border border-orange-900/50 px-2 py-0.5 rounded">
+            <i class="fa-brands fa-java mr-1"></i> ${escapeHtml(prog.category)}
+          </span>
+          <span class="text-xs font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-0.5 rounded">
+            <i class="fa-regular fa-clock mr-1"></i> Time: ${escapeHtml(prog.timeComplexity)}
+          </span>
+          <span class="text-xs font-mono text-sky-400 bg-sky-950/40 border border-sky-900/50 px-2 py-0.5 rounded">
+            <i class="fa-solid fa-microchip mr-1"></i> Space: ${escapeHtml(prog.spaceComplexity)}
+          </span>
+        </div>
+      </div>
+
+      <h3 class="text-lg font-black text-white">${escapeHtml(prog.title)}</h3>
+      
+      <!-- Problem Statement -->
+      <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1 text-xs text-slate-300 leading-relaxed">
+        <strong class="text-amber-400 font-mono text-[10px] uppercase block"><i class="fa-solid fa-circle-question mr-1"></i> Problem Statement:</strong>
+        <p>${escapeHtml(prog.problemStatement)}</p>
+        <p class="text-[11px] text-slate-400 font-mono pt-1"><strong>Constraints:</strong> ${escapeHtml(prog.constraints)}</p>
+      </div>
+
+      <!-- Approach & Logic -->
+      <div class="p-3 bg-indigo-950/30 border border-indigo-900/50 rounded-xl space-y-1 text-xs text-slate-300 leading-relaxed">
+        <strong class="text-indigo-400 font-mono text-[10px] uppercase block"><i class="fa-solid fa-lightbulb mr-1"></i> Optimal Intuition & Approach:</strong>
+        <p>${escapeHtml(prog.approach)}</p>
+      </div>
+
+      <!-- Sample Input & Output -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
+        <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-xl">
+          <span class="text-[10px] text-slate-400 uppercase block mb-1">Sample Input:</span>
+          <span class="text-amber-300">${escapeHtml(prog.sampleInput)}</span>
+        </div>
+        <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-xl">
+          <span class="text-[10px] text-slate-400 uppercase block mb-1">Expected Output:</span>
+          <span class="text-emerald-300">${escapeHtml(prog.expectedOutput)}</span>
+        </div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <button onclick="sendJavaDsaToCloudIde(${prog.id})" class="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition active:scale-95 flex items-center gap-2">
+          <i class="fa-solid fa-play"></i> Run Solution in Cloud IDE
+        </button>
+        <button onclick="copyJavaDsaCode()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 font-bold">
+          <i class="fa-regular fa-copy"></i> Copy Java Code
+        </button>
+      </div>
+
+      <!-- Source Code Preview -->
+      <div class="space-y-1 pt-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-mono text-slate-400">Complete Runnable Java Class</span>
+          <span class="text-[10px] font-mono text-orange-400">public class Main</span>
+        </div>
+        <pre id="javaDsaCodeBox" class="p-4 bg-slate-900 border border-slate-800 rounded-xl text-emerald-400 font-mono text-xs overflow-x-auto whitespace-pre max-h-96 leading-relaxed">${escapeHtml(prog.code)}</pre>
+      </div>
+    </div>
+  `;
+}
+
+function filterJavaDsa(cat) {
+  currentJavaCategory = cat;
+  const pills = [
+    { id: 'javaPill_all', cat: 'all' },
+    { id: 'javaPill_Arrays', cat: 'Arrays & Hashing' },
+    { id: 'javaPill_Strings', cat: 'Strings' },
+    { id: 'javaPill_Searching', cat: 'Searching & Sorting' },
+    { id: 'javaPill_LinkedLists', cat: 'Linked Lists' },
+    { id: 'javaPill_Stacks', cat: 'Stacks & Queues' },
+    { id: 'javaPill_Trees', cat: 'Trees' },
+    { id: 'javaPill_DP', cat: 'Dynamic Programming' },
+    { id: 'javaPill_Graphs', cat: 'Graphs' }
+  ];
+
+  pills.forEach(p => {
+    const el = document.getElementById(p.id);
+    if (el) {
+      if (p.cat === cat) {
+        el.className = "px-2.5 py-1 rounded-lg bg-orange-600 text-white font-bold whitespace-nowrap";
+      } else {
+        el.className = "px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap";
+      }
+    }
+  });
+
+  renderJavaDsaList();
+}
+
+function searchJavaDsa() {
+  const input = document.getElementById('javaDsaSearchInput');
+  currentJavaSearchTerm = input ? input.value : '';
+  renderJavaDsaList();
+}
+
+function copyJavaDsaCode() {
+  const box = document.getElementById('javaDsaCodeBox');
+  if (!box) return;
+  navigator.clipboard.writeText(box.innerText).then(() => {
+    alert("✅ Java DSA code copied to clipboard!");
+  }).catch(() => {
+    alert("Copied!");
+  });
+}
+
+function sendJavaDsaToCloudIde(progId) {
+  if (typeof JAVA_DSA_PROGRAMS === 'undefined') return;
+  const prog = JAVA_DSA_PROGRAMS.find(p => p.id === progId);
+  if (!prog) return;
+
+  const editor = document.getElementById('codeEditorInput');
+  const selector = document.getElementById('ideLanguageSelector');
+  const status = document.getElementById('ideCurrentStatusBadge');
+
+  if (selector) selector.value = 'java';
+  if (editor) editor.value = prog.code;
+  if (status) status.innerText = `Loaded: ${prog.title}`;
+
+  switchTab('ide');
+
+  const terminal = document.getElementById('codeTerminalOutput');
+  if (terminal) {
+    terminal.innerText = `// Loaded Java DSA ${prog.title}\n// Ready to compile! Click 'Run / Compile Code' above.\n`;
+  }
+}
+
+// ========================================================
+// 6D. 10 APPLIED DBMS & MS-WORD IDE LABS CONTROLLER
+// ========================================================
+let currentDbmsWordId = 1;
+let currentDbmsWordCategory = 'all';
+
+function initDbmsWordLab() {
+  renderDbmsWordExerciseList();
+  renderCurrentDbmsWordExercise();
+}
+
+function renderDbmsWordExerciseList() {
+  const container = document.getElementById('dbmsWordExerciseList');
+  if (!container || typeof DBMS_WORD_EXERCISES === 'undefined') return;
+
+  const filtered = DBMS_WORD_EXERCISES.filter(e => {
+    if (currentDbmsWordCategory === 'all') return true;
+    return e.category === currentDbmsWordCategory;
+  });
+
+  if (!filtered.some(e => e.id === currentDbmsWordId)) {
+    currentDbmsWordId = filtered[0].id;
+  }
+
+  container.innerHTML = filtered.map(e => {
+    const isSelected = e.id === currentDbmsWordId;
+    const isDbms = e.category === 'DBMS & SQL';
+
+    return `
+      <div onclick="selectDbmsWordExercise(${e.id})" class="p-3 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+        isSelected
+          ? 'bg-cyan-950/30 border-cyan-500 shadow-md ring-1 ring-cyan-500/50'
+          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+      }">
+        <div class="space-y-1 pr-2">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
+              isDbms ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+            }">
+              <i class="${isDbms ? 'fa-solid fa-database' : 'fa-solid fa-file-word'} mr-1"></i> ${e.category}
+            </span>
+          </div>
+          <h4 class="text-xs font-bold text-white">${escapeHtml(e.title)}</h4>
+        </div>
+        <i class="fa-solid fa-chevron-right text-xs ${isSelected ? 'text-cyan-400' : 'text-slate-600'}"></i>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectDbmsWordExercise(id) {
+  currentDbmsWordId = id;
+  renderDbmsWordExerciseList();
+  renderCurrentDbmsWordExercise();
+}
+
+function renderCurrentDbmsWordExercise() {
+  const container = document.getElementById('dbmsWordActiveContainer');
+  if (!container || typeof DBMS_WORD_EXERCISES === 'undefined') return;
+
+  const ex = DBMS_WORD_EXERCISES.find(e => e.id === currentDbmsWordId) || DBMS_WORD_EXERCISES[0];
+  if (!ex) return;
+
+  const isDbms = ex.category === 'DBMS & SQL';
+
+  const inputsHtml = (ex.inputs || []).map(inp => {
+    if (inp.type === 'select') {
+      const optsHtml = (inp.options || []).map(opt => `<option value="${escapeHtml(opt)}" ${opt === inp.default ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
+      return `
+        <div class="space-y-1">
+          <label class="block text-xs font-mono text-slate-400">${escapeHtml(inp.label)}</label>
+          <select id="dbmsword_inp_${inp.id}" onchange="runCurrentDbmsWordExercise()" class="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-xl p-2.5 focus:outline-none focus:border-cyan-500 font-mono">
+            ${optsHtml}
+          </select>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="space-y-1">
+          <label class="block text-xs font-mono text-slate-400">${escapeHtml(inp.label)}</label>
+          <input type="text" id="dbmsword_inp_${inp.id}" value="${escapeHtml(inp.default || '')}" oninput="runCurrentDbmsWordExercise()" class="w-full bg-slate-900 border border-slate-700 text-xs text-cyan-300 rounded-xl p-2.5 focus:outline-none focus:border-cyan-500 font-mono">
+        </div>
+      `;
+    }
+  }).join('');
+
+  container.innerHTML = `
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-900 pb-3">
+        <span class="text-xs font-mono font-bold px-2 py-0.5 rounded ${
+          isDbms ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+        }">
+          <i class="${isDbms ? 'fa-solid fa-database' : 'fa-solid fa-file-word'} mr-1"></i> ${ex.category}
+        </span>
+        <span class="text-xs font-mono text-slate-500">Exercise ${ex.id} of 10</span>
+      </div>
+
+      <h3 class="text-base md:text-lg font-black text-white">${escapeHtml(ex.title)}</h3>
+      <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(ex.desc)}</p>
+
+      <!-- Input Controls Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900/50 p-3.5 rounded-xl border border-slate-800/80">
+        ${inputsHtml}
+      </div>
+
+      <!-- Live Simulation Output Box -->
+      <div class="space-y-1.5">
+        <span class="text-[11px] font-mono uppercase text-cyan-400 font-bold block">Live Execution / Simulation Result:</span>
+        <div id="dbmsWordOutputBox" class="min-h-[140px] text-xs text-slate-200">
+          <!-- Injected by runCurrentDbmsWordExercise() -->
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <button onclick="sendDbmsWordToCloudIde(${ex.id})" class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition active:scale-95 flex items-center gap-2">
+          <i class="fa-solid fa-play"></i> Send & Run in Cloud IDE
+        </button>
+        <button onclick="copyDbmsWordSnippet()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 font-bold">
+          <i class="fa-regular fa-copy"></i> Copy Code Snippet
+        </button>
+      </div>
+
+      <!-- Underlying Code Snippet -->
+      <div class="space-y-1 pt-1">
+        <span class="text-[11px] font-mono text-slate-400">Source Implementation / Script</span>
+        <pre id="dbmsWordSnippetBox" class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-emerald-400 font-mono text-xs overflow-x-auto whitespace-pre">${escapeHtml(ex.codeSnippet)}</pre>
+      </div>
+    </div>
+  `;
+
+  runCurrentDbmsWordExercise();
+}
+
+function runCurrentDbmsWordExercise() {
+  if (typeof DBMS_WORD_EXERCISES === 'undefined') return;
+  const ex = DBMS_WORD_EXERCISES.find(e => e.id === currentDbmsWordId);
+  if (!ex) return;
+
+  const vals = {};
+  (ex.inputs || []).forEach(inp => {
+    const el = document.getElementById(`dbmsword_inp_${inp.id}`);
+    if (el) vals[inp.id] = el.value;
+  });
+
+  const outEl = document.getElementById('dbmsWordOutputBox');
+  if (outEl) {
+    try {
+      outEl.innerHTML = ex.run(vals);
+    } catch (err) {
+      outEl.innerHTML = `<div class="p-3 bg-rose-950/40 text-rose-300 text-xs">Error: ${err.message}</div>`;
+    }
+  }
+}
+
+function filterDbmsWord(cat) {
+  currentDbmsWordCategory = cat;
+  const pills = [
+    { id: 'dbmsWordPill_all', cat: 'all' },
+    { id: 'dbmsWordPill_dbms', cat: 'DBMS & SQL' },
+    { id: 'dbmsWordPill_word', cat: 'MS-Word' }
+  ];
+
+  pills.forEach(p => {
+    const el = document.getElementById(p.id);
+    if (el) {
+      if (p.cat === cat) {
+        el.className = "px-3 py-1 rounded-lg bg-cyan-600 text-white font-bold";
+      } else {
+        el.className = "px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white";
+      }
+    }
+  });
+
+  renderDbmsWordExerciseList();
+  renderCurrentDbmsWordExercise();
+}
+
+function copyDbmsWordSnippet() {
+  const box = document.getElementById('dbmsWordSnippetBox');
+  if (!box) return;
+  navigator.clipboard.writeText(box.innerText).then(() => {
+    alert("✅ Code snippet copied to clipboard!");
+  }).catch(() => {
+    alert("Copied!");
+  });
+}
+
+function sendDbmsWordToCloudIde(id) {
+  if (typeof DBMS_WORD_EXERCISES === 'undefined') return;
+  const ex = DBMS_WORD_EXERCISES.find(e => e.id === id);
+  if (!ex) return;
+
+  const editor = document.getElementById('codeEditorInput');
+  const selector = document.getElementById('ideLanguageSelector');
+  const status = document.getElementById('ideCurrentStatusBadge');
+
+  if (selector) selector.value = ex.category === 'MS-Word' ? 'word' : 'sql';
+  if (editor) editor.value = ex.codeSnippet;
+  if (status) status.innerText = `Loaded: ${ex.title}`;
+
+  switchTab('ide');
+
+  const terminal = document.getElementById('codeTerminalOutput');
+  if (terminal) {
+    terminal.innerText = `// Loaded ${ex.title}\n// Ready to execute in sandbox! Click 'Run / Compile Code' above.\n`;
+  }
 }
 
 // ========================================================
