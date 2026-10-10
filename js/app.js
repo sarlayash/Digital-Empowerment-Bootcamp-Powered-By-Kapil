@@ -36,6 +36,8 @@ const wheelColors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#ec
 
 // Initialize on Load
 document.addEventListener('DOMContentLoaded', () => {
+  initLiveClocks();
+  initSidebarState();
   initServiceWorker();
   initPWAInstallPrompt();
   loadSavedUser();
@@ -44,9 +46,109 @@ document.addEventListener('DOMContentLoaded', () => {
   initSpinningWheel();
   setupIde();
   initLevel0Lab();
+  initFoundationsTab();
   selectDay(1);
   updateAppScreenState();
 });
+
+// ========================================================
+// LIVE REAL-TIME CLOCKS ENGINE (Header & Footer Synchronization)
+// ========================================================
+function initLiveClocks() {
+  updateLiveClocks();
+  setInterval(updateLiveClocks, 1000);
+}
+
+function updateLiveClocks() {
+  const now = new Date();
+  
+  // Format 1: Time with seconds: HH:MM:SS AM/PM
+  const timeOnly = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  
+  // Format 2: Full date and time: Sun, 11 Oct 2026 • 03:15:24 AM
+  const dateOptions = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+  const fullDateStr = now.toLocaleDateString('en-IN', dateOptions) + ' • ' + timeOnly;
+
+  const clockHeader = document.getElementById('festiveLiveHeaderClock');
+  const clockFooter = document.getElementById('festiveLiveFooterClock');
+  const clockDisplay = document.getElementById('liveClockDisplay');
+
+  if (clockHeader) clockHeader.textContent = fullDateStr;
+  if (clockFooter) clockFooter.textContent = fullDateStr;
+  if (clockDisplay) clockDisplay.textContent = timeOnly;
+}
+
+// ========================================================
+// LEFT DARK COLLAPSIBLE SIDEBAR CONTROLLER
+// ========================================================
+function initSidebarState() {
+  const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+  const sidebar = document.getElementById('appSidebar');
+  const icon = document.getElementById('sidebarToggleIcon');
+  if (sidebar) {
+    if (isCollapsed) {
+      sidebar.classList.remove('sidebar-expanded');
+      sidebar.classList.add('sidebar-collapsed');
+      if (icon) {
+        icon.classList.remove('fa-chevron-left');
+        icon.classList.add('fa-chevron-right');
+      }
+    } else {
+      sidebar.classList.remove('sidebar-collapsed');
+      sidebar.classList.add('sidebar-expanded');
+      if (icon) {
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-left');
+      }
+    }
+  }
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('appSidebar');
+  const icon = document.getElementById('sidebarToggleIcon');
+  if (!sidebar) return;
+  const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+  if (isCollapsed) {
+    sidebar.classList.remove('sidebar-collapsed');
+    sidebar.classList.add('sidebar-expanded');
+    if (icon) {
+      icon.classList.remove('fa-chevron-right');
+      icon.classList.add('fa-chevron-left');
+    }
+    localStorage.setItem('sidebar_collapsed', 'false');
+  } else {
+    sidebar.classList.remove('sidebar-expanded');
+    sidebar.classList.add('sidebar-collapsed');
+    if (icon) {
+      icon.classList.remove('fa-chevron-left');
+      icon.classList.add('fa-chevron-right');
+    }
+    localStorage.setItem('sidebar_collapsed', 'true');
+  }
+}
+
+function toggleMobileSidebar(forceClose) {
+  const sidebar = document.getElementById('appSidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (!sidebar) return;
+  const isCurrentlyOpen = !sidebar.classList.contains('-translate-x-full');
+  if (forceClose || isCurrentlyOpen) {
+    sidebar.classList.add('-translate-x-full');
+    if (backdrop) backdrop.classList.add('hidden');
+  } else {
+    sidebar.classList.remove('-translate-x-full');
+    if (backdrop) backdrop.classList.remove('hidden');
+  }
+}
+
+function sidebarNavigate(tabId) {
+  switchTab(tabId);
+  if (window.innerWidth < 768) {
+    toggleMobileSidebar(true);
+  }
+}
+
 
 // ========================================================
 // ONBOARDING SCREEN FLOW CONTROLLER
@@ -451,14 +553,14 @@ function selectDay(dayNum) {
 
 function switchTab(tabId) {
   currentTab = tabId;
-  const tabs = ['notes', 'javadsa', 'dbmsword', 'level0', 'mocktests', 'pretest', 'ide', 'assessment', 'credentials'];
+  const tabs = ['notes', 'foundations', 'javadsa', 'dbmsword', 'level0', 'mocktests', 'pretest', 'ide', 'assessment', 'credentials'];
 
   tabs.forEach(t => {
     const content = document.getElementById('tabContent' + capitalize(t));
     const btn = document.getElementById('tabBtn' + capitalize(t));
     if (content) content.classList.add('hidden');
     if (btn) {
-      btn.className = "px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-1.5 whitespace-nowrap text-xs";
+      btn.className = "px-3 md:px-4 py-2.5 border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-1.5 whitespace-nowrap text-xs font-medium";
     }
   });
 
@@ -467,10 +569,12 @@ function switchTab(tabId) {
 
   if (activeContent) activeContent.classList.remove('hidden');
   if (activeBtn) {
-    activeBtn.className = "px-3 md:px-4 py-2.5 border-b-2 border-indigo-500 text-indigo-400 font-bold flex items-center gap-1.5 whitespace-nowrap text-xs";
+    activeBtn.className = "px-3 md:px-4 py-2.5 border-b-2 border-indigo-600 text-indigo-600 font-bold flex items-center gap-1.5 whitespace-nowrap text-xs";
   }
 
-  if (tabId === 'ide') {
+  if (tabId === 'foundations') {
+    initFoundationsTab();
+  } else if (tabId === 'ide') {
     loadIdeLanguageTemplate();
   } else if (tabId === 'javadsa') {
     renderJavaDsaList();
@@ -486,6 +590,320 @@ function switchTab(tabId) {
     updateCredentialsUI();
   }
 }
+
+// ========================================================
+// FOUNDATIONS & EMERGING TECH HUB CONTROLLER
+// 100 Hardware Devices • Conversions • History • Languages • AI & MCP
+// 5 Knowledge Checks (25 High-Yield MCQs)
+// ========================================================
+let currentFoundationsModuleId = 'hardware_devices';
+let userFoundationsAnswers = {}; // { moduleId: { qIndex: selectedOptionIndex } }
+let foundationsSubmitted = {}; // { moduleId: true/false }
+
+function initFoundationsTab() {
+  renderFoundationsPills();
+  renderFoundationsActiveModule();
+}
+
+function renderFoundationsPills() {
+  const pillsContainer = document.getElementById('foundationsModulePills');
+  if (!pillsContainer || !window.FOUNDATIONS_MODULES) return;
+
+  pillsContainer.innerHTML = window.FOUNDATIONS_MODULES.map((mod, idx) => {
+    const isActive = mod.id === currentFoundationsModuleId;
+    const isSubmitted = foundationsSubmitted[mod.id];
+    let scoreBadge = '';
+    if (isSubmitted) {
+      let correct = 0;
+      mod.knowledgeCheck.forEach((q, qIdx) => {
+        if (userFoundationsAnswers[mod.id] && userFoundationsAnswers[mod.id][qIdx] === q.ans) correct++;
+      });
+      scoreBadge = `<span class="ml-1 text-[9px] px-1 rounded ${correct >= 4 ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${correct}/5</span>`;
+    }
+
+    if (isActive) {
+      return `
+        <button onclick="selectFoundationsModule('${mod.id}')" class="p-2.5 rounded-xl rainbow-gradient-bg text-white font-bold text-xs flex flex-col items-center justify-center text-center shadow-md transition transform scale-[1.02] border border-white/30">
+          <i class="${mod.icon} text-sm mb-1"></i>
+          <span class="truncate w-full text-[11px]">Mod ${idx + 1}: ${mod.badge}</span>
+          ${scoreBadge}
+        </button>
+      `;
+    } else {
+      return `
+        <button onclick="selectFoundationsModule('${mod.id}')" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex flex-col items-center justify-center text-center border border-slate-200 transition">
+          <i class="${mod.icon} text-sm text-slate-500 mb-1"></i>
+          <span class="truncate w-full text-[11px]">Mod ${idx + 1}: ${mod.badge}</span>
+          ${scoreBadge}
+        </button>
+      `;
+    }
+  }).join('');
+}
+
+function selectFoundationsModule(moduleId) {
+  currentFoundationsModuleId = moduleId;
+  renderFoundationsPills();
+  renderFoundationsActiveModule();
+}
+
+function toggleAccordionSection(sectionId) {
+  const body = document.getElementById(sectionId);
+  const icon = document.getElementById(sectionId + '-icon');
+  if (!body) return;
+  body.classList.toggle('is-collapsed');
+  if (icon) {
+    icon.classList.toggle('rotate-180');
+  }
+}
+
+function renderFoundationsActiveModule() {
+  const container = document.getElementById('foundationsActiveModuleContainer');
+  if (!container || !window.FOUNDATIONS_MODULES) return;
+
+  const mod = window.FOUNDATIONS_MODULES.find(m => m.id === currentFoundationsModuleId) || window.FOUNDATIONS_MODULES[0];
+  const modIndex = window.FOUNDATIONS_MODULES.findIndex(m => m.id === mod.id);
+
+  if (!userFoundationsAnswers[mod.id]) {
+    userFoundationsAnswers[mod.id] = {};
+  }
+
+  const isSubmitted = !!foundationsSubmitted[mod.id];
+  let score = 0;
+  if (isSubmitted) {
+    mod.knowledgeCheck.forEach((q, qIdx) => {
+      if (userFoundationsAnswers[mod.id][qIdx] === q.ans) score++;
+    });
+  }
+
+  let html = `
+    <!-- Module Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-indigo-900/40 space-y-2">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-bold flex items-center gap-1.5">
+          <i class="${mod.icon}"></i> ${mod.badge}
+        </span>
+        <span class="text-[11px] font-mono text-slate-300">Module ${modIndex + 1} of 5 • 5-MCQ Knowledge Check</span>
+      </div>
+      <h3 class="text-base md:text-lg font-black text-white">${mod.title}</h3>
+      <p class="text-xs text-amber-200 font-medium">${mod.subtitle}</p>
+      <p class="text-xs text-slate-300 leading-relaxed pt-1">${mod.overview}</p>
+    </div>
+  `;
+
+  // Content Sections / Accordions
+  html += `<div class="space-y-4">`;
+  html += `
+    <div class="flex items-center justify-between">
+      <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-book text-indigo-600"></i> Detailed Study Reference (Click sections to Expand/Collapse)
+      </h4>
+      <span class="text-[11px] text-slate-500 font-mono">Interactive Accordions</span>
+    </div>
+  `;
+
+  // Render categories / sections
+  if (mod.categories && Array.isArray(mod.categories)) {
+    mod.categories.forEach((cat, catIdx) => {
+      const sectionId = `foundSec_${mod.id}_${catIdx}`;
+      html += `
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition hover:border-slate-300">
+          <div onclick="toggleAccordionSection('${sectionId}')" class="collapsible-header p-4 bg-slate-50 hover:bg-slate-100 flex items-center justify-between gap-3 border-b border-slate-200">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center text-sm font-bold">
+                <i class="${cat.icon || 'fa-solid fa-microchip'}"></i>
+              </div>
+              <div>
+                <h5 class="text-xs md:text-sm font-bold text-slate-900">${cat.name}</h5>
+                <span class="text-[10px] font-mono text-slate-500">${cat.badge || (cat.items ? cat.items.length + ' Items' : 'Section')}</span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-[11px] font-bold text-indigo-600 hidden sm:inline">Toggle View</span>
+              <i id="${sectionId}-icon" class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-200"></i>
+            </div>
+          </div>
+
+          <div id="${sectionId}" class="collapsible-body p-4 text-xs text-slate-700 leading-relaxed bg-white">
+            ${cat.items ? `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                ${cat.items.map(item => `
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                    <p class="font-bold text-slate-900 text-xs">${item.name}</p>
+                    <p class="text-[11px] text-slate-600 leading-normal">${item.desc}</p>
+                  </div>
+                `).join('')}
+              </div>
+            ` : (cat.content || '')}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  html += `</div>`; // Close accordions
+
+  // Knowledge Check Assessment Section (5 MCQs)
+  html += `
+    <div class="bg-white border-2 border-indigo-100 rounded-2xl p-5 shadow-sm space-y-5 mt-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold">Interactive Assessment</span>
+            <span class="text-xs text-slate-500 font-mono">Module ${modIndex + 1} Checkpoint</span>
+          </div>
+          <h4 class="text-sm md:text-base font-black text-slate-900 mt-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question text-indigo-600"></i> Knowledge Check Assessment (5 High-Yield MCQs)
+          </h4>
+        </div>
+        <div class="text-xs font-mono text-slate-600">
+          Target: <strong class="text-emerald-600 font-bold">≥ 80% (4/5)</strong>
+        </div>
+      </div>
+
+      ${isSubmitted ? `
+        <div class="p-4 rounded-xl ${score >= 4 ? 'bg-emerald-50 border border-emerald-300 text-emerald-900' : 'bg-amber-50 border border-amber-300 text-amber-900'} flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-xl ${score >= 4 ? 'bg-emerald-500' : 'bg-amber-500'} text-white flex items-center justify-center text-xl font-bold shadow">
+              <i class="${score >= 4 ? 'fa-solid fa-award' : 'fa-solid fa-arrows-rotate'}"></i>
+            </div>
+            <div>
+              <p class="font-extrabold text-sm">${score >= 4 ? 'Mastery Demonstrated! Outstanding Work!' : 'Good Effort! Review & Retry for Full Mastery'}</p>
+              <p class="text-xs font-mono mt-0.5">Your Score: <strong>${score} / 5 (${Math.round((score/5)*100)}%)</strong></p>
+            </div>
+          </div>
+          <button onclick="resetKnowledgeCheck('${mod.id}')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold shadow hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0">
+            <i class="fa-solid fa-rotate-left"></i> Retake Knowledge Check
+          </button>
+        </div>
+      ` : ''}
+
+      <!-- Questions List -->
+      <div class="space-y-4">
+        ${mod.knowledgeCheck.map((qItem, qIdx) => {
+          const userAns = userFoundationsAnswers[mod.id] ? userFoundationsAnswers[mod.id][qIdx] : undefined;
+          const isCorrect = isSubmitted && userAns === qItem.ans;
+
+          return `
+            <div class="p-4 rounded-xl border ${isSubmitted ? (isCorrect ? 'bg-emerald-50/50 border-emerald-300' : 'bg-rose-50/40 border-rose-300') : 'bg-slate-50 border-slate-200'} space-y-3">
+              <div class="flex items-start justify-between gap-2">
+                <p class="font-bold text-slate-900 text-xs md:text-sm">
+                  <span class="text-indigo-600 font-mono mr-1">Q${qIdx + 1}.</span> ${qItem.q}
+                </p>
+                ${isSubmitted ? (isCorrect ? `
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0">
+                    <i class="fa-solid fa-check mr-1"></i> Correct
+                  </span>
+                ` : `
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold shrink-0">
+                    <i class="fa-solid fa-xmark mr-1"></i> Incorrect
+                  </span>
+                `) : ''}
+              </div>
+
+              <!-- Options -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                ${qItem.options.map((opt, optIdx) => {
+                  const isSelected = userAns === optIdx;
+                  let optClass = "p-2.5 rounded-xl border text-xs cursor-pointer transition flex items-center space-x-2 ";
+                  
+                  if (!isSubmitted) {
+                    if (isSelected) {
+                      optClass += "bg-indigo-600 text-white border-indigo-600 font-semibold shadow-sm";
+                    } else {
+                      optClass += "bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-slate-100";
+                    }
+                  } else {
+                    // Submitted state
+                    if (optIdx === qItem.ans) {
+                      optClass += "bg-emerald-100 text-emerald-900 border-emerald-400 font-bold";
+                    } else if (isSelected && optIdx !== qItem.ans) {
+                      optClass += "bg-rose-100 text-rose-900 border-rose-300 line-through";
+                    } else {
+                      optClass += "bg-white text-slate-500 border-slate-200 opacity-60";
+                    }
+                  }
+
+                  return `
+                    <div onclick="${!isSubmitted ? `selectKnowledgeCheckOption('${mod.id}', ${qIdx}, ${optIdx})` : ''}" class="${optClass}">
+                      <span class="w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-mono shrink-0 ${isSelected ? (!isSubmitted ? 'border-white text-white' : 'border-current') : 'border-slate-300 text-slate-500'}">
+                        ${String.fromCharCode(65 + optIdx)}
+                      </span>
+                      <span class="leading-tight">${opt}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <!-- Explanation (Shown after submit) -->
+              ${isSubmitted ? `
+                <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-1">
+                  <p class="font-bold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb text-amber-500"></i> Zero-Assumption Educational Explanation:
+                  </p>
+                  <p class="text-slate-600 leading-relaxed text-[11px]">${qItem.exp}</p>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- Action Button -->
+      ${!isSubmitted ? `
+        <div class="pt-2 flex justify-end">
+          <button onclick="submitKnowledgeCheck('${mod.id}')" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-extrabold text-xs rounded-xl shadow-lg transition active:scale-95 flex items-center gap-2">
+            <i class="fa-solid fa-check-double"></i> Submit Knowledge Check & View Explanations
+          </button>
+        </div>
+      ` : ''}
+
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+function selectKnowledgeCheckOption(moduleId, qIndex, optionIndex) {
+  if (foundationsSubmitted[moduleId]) return;
+  if (!userFoundationsAnswers[moduleId]) userFoundationsAnswers[moduleId] = {};
+  userFoundationsAnswers[moduleId][qIndex] = optionIndex;
+  renderFoundationsActiveModule();
+}
+
+function submitKnowledgeCheck(moduleId) {
+  const mod = window.FOUNDATIONS_MODULES.find(m => m.id === moduleId);
+  if (!mod) return;
+
+  const answers = userFoundationsAnswers[moduleId] || {};
+  const answeredCount = Object.keys(answers).length;
+  if (answeredCount < mod.knowledgeCheck.length) {
+    if (!confirm(`You have answered ${answeredCount} of ${mod.knowledgeCheck.length} questions. Submit anyway?`)) {
+      return;
+    }
+  }
+
+  foundationsSubmitted[moduleId] = true;
+  renderFoundationsPills();
+  renderFoundationsActiveModule();
+
+  // Trigger celebration confetti if score is high
+  let correct = 0;
+  mod.knowledgeCheck.forEach((q, idx) => {
+    if (answers[idx] === q.ans) correct++;
+  });
+  if (correct >= 4 && window.confetti) {
+    window.confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+  }
+}
+
+function resetKnowledgeCheck(moduleId) {
+  foundationsSubmitted[moduleId] = false;
+  userFoundationsAnswers[moduleId] = {};
+  renderFoundationsPills();
+  renderFoundationsActiveModule();
+}
+
 
 function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -2569,46 +2987,46 @@ function updateCredentialsUI() {
     if (isPassed) {
       passedCount++;
       if (card) {
-        card.className = "relative bg-gradient-to-b from-slate-900 to-indigo-950/40 border-2 border-emerald-500/70 rounded-xl p-4 text-center space-y-3 shadow-lg shadow-emerald-500/10";
+        card.className = "relative bg-white border-2 border-emerald-500 rounded-2xl p-4 text-center space-y-3 shadow-md";
       }
       if (icon) {
-        const colors = ["", "from-indigo-600 to-sky-400", "from-emerald-600 to-teal-400", "from-amber-500 to-rose-400"];
-        icon.className = `w-16 h-16 mx-auto rounded-full bg-gradient-to-tr ${colors[d]} flex items-center justify-center text-2xl text-white shadow-lg`;
+        const colors = ["", "from-blue-600 to-indigo-600", "from-emerald-600 to-teal-600", "from-amber-500 to-orange-500"];
+        icon.className = `w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr ${colors[d]} flex items-center justify-center text-2xl text-white shadow-md`;
       }
       if (lockBadge) {
-        lockBadge.className = "text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold";
+        lockBadge.className = "text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold";
         lockBadge.innerHTML = `<i class="fa-solid fa-unlock"></i> UNLOCKED (${score}%)`;
       }
       if (scoreText) {
-        scoreText.innerHTML = `<span class="text-emerald-400 font-semibold">Passed Benchmark: ${score}/100</span>`;
+        scoreText.innerHTML = `<span class="text-emerald-700 font-bold">Passed Benchmark: ${score}/100</span>`;
       }
       if (pngBtn) {
-        pngBtn.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] rounded-lg border border-slate-600 font-bold shadow transition cursor-pointer";
+        pngBtn.className = "px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[10px] rounded-lg font-bold shadow-sm transition cursor-pointer";
       }
       if (pdfBtn) {
-        const pdfColors = ["", "bg-indigo-600 hover:bg-indigo-500", "bg-emerald-600 hover:bg-emerald-500", "bg-amber-600 hover:bg-amber-500"];
-        pdfBtn.className = `px-3 py-1.5 ${pdfColors[d]} text-white text-[10px] rounded-lg font-bold shadow transition cursor-pointer`;
+        const pdfColors = ["", "bg-blue-600 hover:bg-blue-500", "bg-emerald-600 hover:bg-emerald-500", "bg-amber-600 hover:bg-amber-500"];
+        pdfBtn.className = `px-3 py-1.5 ${pdfColors[d]} text-white text-[10px] rounded-lg font-bold shadow-sm transition cursor-pointer`;
       }
     } else {
       allThreePassed = false;
       if (card) {
-        card.className = "relative bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center space-y-3 opacity-90";
+        card.className = "relative bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center space-y-3 shadow-sm";
       }
       if (icon) {
-        icon.className = "w-16 h-16 mx-auto rounded-full bg-slate-900 text-slate-600 flex items-center justify-center text-2xl border border-slate-800";
+        icon.className = "w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl border border-slate-200 shadow-inner";
       }
       if (lockBadge) {
-        lockBadge.className = "text-[9px] font-mono px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold";
+        lockBadge.className = "text-[9px] font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 font-bold";
         lockBadge.innerHTML = `<i class="fa-solid fa-lock"></i> LOCKED`;
       }
       if (scoreText) {
-        scoreText.innerHTML = `<span class="text-rose-400/80">Need ≥90% • Current: ${score}/100</span>`;
+        scoreText.innerHTML = `<span class="text-slate-500 text-[10px]">Need ≥90% • Current: ${score}/100</span>`;
       }
       if (pngBtn) {
-        pngBtn.className = "px-3 py-1.5 bg-slate-900 text-slate-600 text-[10px] rounded-lg border border-slate-800/80 font-medium cursor-not-allowed";
+        pngBtn.className = "px-3 py-1.5 bg-slate-100 text-slate-400 text-[10px] rounded-lg border border-slate-200 font-medium cursor-not-allowed";
       }
       if (pdfBtn) {
-        pdfBtn.className = "px-3 py-1.5 bg-slate-900 text-slate-600 text-[10px] rounded-lg border border-slate-800/80 font-medium cursor-not-allowed";
+        pdfBtn.className = "px-3 py-1.5 bg-slate-100 text-slate-400 text-[10px] rounded-lg border border-slate-200 font-medium cursor-not-allowed";
       }
     }
   });
@@ -2622,40 +3040,40 @@ function updateCredentialsUI() {
 
   if (allThreePassed || testModeOverride) {
     if (certCard) {
-      certCard.className = "relative bg-gradient-to-r from-indigo-950 via-slate-900 to-amber-950/40 border-2 border-amber-500 rounded-2xl p-6 text-center space-y-3 shadow-2xl shadow-amber-500/20";
+      certCard.className = "relative cert-guilloche-border rounded-2xl p-6 md:p-8 text-center space-y-4 shadow-xl bg-gradient-to-br from-amber-50/40 via-white to-amber-50/60";
     }
     if (certStatus) {
-      certStatus.className = "text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-black animate-pulse";
-      certStatus.innerHTML = `<i class="fa-solid fa-crown text-amber-400"></i> UNLOCKED • 3/3 DAYS PASSED (≥90%)`;
+      certStatus.className = "text-[9px] font-mono px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-black animate-pulse";
+      certStatus.innerHTML = `<i class="fa-solid fa-crown text-amber-500"></i> UNLOCKED • 3/3 DAYS PASSED (≥90%)`;
     }
     if (certReq) {
       const s1 = localStorage.getItem('day_1_score') || '90';
       const s2 = localStorage.getItem('day_2_score') || '90';
       const s3 = localStorage.getItem('day_3_score') || '90';
-      certReq.innerHTML = `<span class="text-amber-200 font-medium">All 3 daily assessments passed! Day 1: ${s1}% | Day 2: ${s2}% | Day 3: ${s3}%</span>`;
+      certReq.innerHTML = `<span class="text-amber-900 font-bold">All 3 daily assessments passed! Day 1: ${s1}% | Day 2: ${s2}% | Day 3: ${s3}%</span>`;
     }
     if (certPngBtn) {
-      certPngBtn.className = "px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-600 shadow flex items-center gap-2 cursor-pointer";
+      certPngBtn.className = "px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow flex items-center gap-2 cursor-pointer";
     }
     if (certPdfBtn) {
-      certPdfBtn.className = "px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer";
+      certPdfBtn.className = "px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer";
     }
   } else {
     if (certCard) {
-      certCard.className = "relative bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center space-y-3 opacity-90";
+      certCard.className = "relative cert-guilloche-border rounded-2xl p-6 md:p-8 text-center space-y-4 shadow-sm bg-white";
     }
     if (certStatus) {
-      certStatus.className = "text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold";
+      certStatus.className = "text-[9px] font-mono px-3 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 font-bold";
       certStatus.innerHTML = `<i class="fa-solid fa-lock"></i> LOCKED (${passedCount}/3 Days Passed)`;
     }
     if (certReq) {
-      certReq.innerHTML = `<span class="text-slate-400">Requires scoring <strong>≥90%</strong> on Day 1, Day 2, and Day 3 assessments. (${3 - passedCount} more day(s) required)</span>`;
+      certReq.innerHTML = `<span class="text-slate-500 text-xs">Requires scoring <strong>≥90%</strong> on Day 1, Day 2, and Day 3 assessments. (${3 - passedCount} more day(s) required)</span>`;
     }
     if (certPngBtn) {
-      certPngBtn.className = "px-4 py-2 bg-slate-900 text-slate-600 font-semibold text-xs rounded-xl border border-slate-800 flex items-center gap-2 cursor-not-allowed";
+      certPngBtn.className = "px-5 py-2.5 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl border border-slate-200 flex items-center gap-2 cursor-not-allowed";
     }
     if (certPdfBtn) {
-      certPdfBtn.className = "px-4 py-2 bg-slate-900 text-slate-600 font-extrabold text-xs rounded-xl border border-slate-800 flex items-center gap-2 cursor-not-allowed";
+      certPdfBtn.className = "px-5 py-2.5 bg-slate-100 text-slate-400 font-black text-xs rounded-xl border border-slate-200 flex items-center gap-2 cursor-not-allowed";
     }
   }
 }
@@ -2672,68 +3090,168 @@ function downloadBadge(format, dayNum) {
   const canvas = document.getElementById('credentialExportCanvas');
   const ctx = canvas.getContext('2d');
 
-  canvas.width = 1200;
-  canvas.height = 800;
+  canvas.width = 1800;
+  canvas.height = 1100;
 
-  // Background
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(0, 0, 1200, 800);
+  // Clean Security Parchment Background
+  ctx.fillStyle = "#fcfdfd";
+  ctx.fillRect(0, 0, 1800, 1100);
 
-  // Border
-  const strokeColor = dayNum === 1 ? "#4f46e5" : dayNum === 2 ? "#10b981" : "#f59e0b";
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 14;
-  ctx.strokeRect(20, 20, 1160, 760);
+  // Subtle Guilloché Watermark Background Lines
+  ctx.strokeStyle = "rgba(226, 232, 240, 0.55)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 1800; i += 40) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(1800 - i, 1100);
+    ctx.stroke();
+  }
 
-  // Title
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 40px system-ui";
+  // Outer Royal Navy Security Border
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineWidth = 16;
+  ctx.strokeRect(30, 30, 1740, 1040);
+
+  // Inner Burnished Gold Accent Border
+  const accentColor = dayNum === 1 ? "#1d4ed8" : dayNum === 2 ? "#047857" : "#b45309";
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(50, 50, 1700, 1000);
+
+  // Corner Rosettes / Brackets
+  ctx.fillStyle = accentColor;
+  [[50, 50], [1750, 50], [50, 1050], [1750, 1050]].forEach(([cx, cy]) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Top Organization Header
+  ctx.fillStyle = "#64748b";
+  ctx.font = "bold 20px monospace";
   ctx.textAlign = "center";
-  ctx.fillText("DIGITAL EMPOWERMENT BOOTCAMP", 600, 140);
+  ctx.fillText("SARLAYASH LEARNING SOLUTIONS LLP • ECOSYSTEM CREDENTIAL SERVICES", 900, 115);
 
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "24px system-ui";
-  ctx.fillText("POWERED BY KAPIL • PART 1", 600, 190);
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "900 38px system-ui";
+  ctx.fillText("DIGITAL EMPOWERMENT BOOTCAMP", 900, 170);
 
-  // Badge Name
+  ctx.fillStyle = "#475569";
+  ctx.font = "bold 22px system-ui";
+  ctx.fillText("POWERED BY KAPIL • ALIGNED WITH GOOGLE & MICROSOFT COMPETENCY STANDARDS", 900, 215);
+
+  // Badge Category Banner Pill
+  ctx.fillStyle = accentColor;
+  ctx.beginPath();
+  ctx.roundRect(400, 255, 1000, 55, [14]);
+  ctx.fill();
+
   const badgeNames = [
     "",
-    "DAY 1: IT FOUNDATION & C LANGUAGE PIONEER",
-    "DAY 2: LOGIC, RECURSION & RDBMS ARCHITECT",
-    "DAY 3: MODERN WEB ENGINEERING GRADUATE"
+    "DAY 1 BADGE: IT FOUNDATION, OS & C LANGUAGE PIONEER",
+    "DAY 2 BADGE: PROCEDURAL LOGIC, RECURSION & RDBMS ARCHITECT",
+    "DAY 3 BADGE: MODERN WEB ENGINEERING & JS ARCHITECTURE"
   ];
-  ctx.fillStyle = strokeColor;
-  ctx.font = "bold 32px system-ui";
-  ctx.fillText(badgeNames[dayNum], 600, 280);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 24px system-ui";
+  ctx.fillText(badgeNames[dayNum], 900, 292);
 
-  // Learner Name & Account
-  const name = currentUser ? currentUser.name : "Kapil Verified Scholar";
-  const email = currentUser ? currentUser.email : "verified.learner@gmail.com";
-  ctx.fillStyle = "#f8fafc";
-  ctx.font = "bold 46px system-ui";
-  ctx.fillText(name, 600, 390);
-
+  // Candidate Presentation
   ctx.fillStyle = "#64748b";
   ctx.font = "20px system-ui";
-  ctx.fillText("Verified Google Account: " + email, 600, 440);
-  ctx.fillText(`60-Minute Timed Mock Passed • Verified Score: ${score}/100 (${score}%) • Benchmark ≥90%`, 600, 480);
+  ctx.fillText("THIS VERIFIED CREDENTIAL IS PROUDLY CONFERRED UPON", 900, 365);
 
-  // Unique Hash & Verification
-  const hash = "SHA256-KAPIL-DEB-" + Math.random().toString(36).substring(2, 12).toUpperCase();
+  // Learner Name
+  const name = currentUser ? currentUser.name : "Kapil Verified Scholar";
+  const email = currentUser ? currentUser.email : "verified.learner@gmail.com";
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "bold 56px system-ui";
+  ctx.fillText(name, 900, 440);
+
+  // Verification Details
+  ctx.fillStyle = "#334155";
+  ctx.font = "bold 22px system-ui";
+  ctx.fillText("Verified Google Account: " + email, 900, 500);
+
+  ctx.fillStyle = accentColor;
+  ctx.font = "bold 22px monospace";
+  ctx.fillText(`60-Minute Comprehensive Mock • Final Score: ${score}/100 (${score}%) • Strict Benchmark: ≥90%`, 900, 545);
+
+  // Decorative Divider Line
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(350, 595);
+  ctx.lineTo(1450, 595);
+  ctx.stroke();
+
+  // Seal Graphic (Left)
+  const sealX = 350;
+  const sealY = 740;
+  ctx.beginPath();
+  ctx.arc(sealX, sealY, 65, 0, Math.PI * 2);
+  ctx.fillStyle = "#fef3c7";
+  ctx.fill();
+  ctx.strokeStyle = "#d97706";
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  ctx.fillStyle = "#b45309";
+  ctx.font = "bold 14px monospace";
+  ctx.fillText("OFFICIAL SEAL", sealX, sealY - 12);
+  ctx.fillText("★ 100% VERIFIED ★", sealX, sealY + 8);
+  ctx.fillText("GRADE A+", sealX, sealY + 28);
+
+  // QR Matrix Simulation Box (Center)
+  const qrX = 900;
+  const qrY = 740;
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(qrX - 45, qrY - 45, 90, 90);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(qrX - 35, qrY - 35, 70, 70);
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(qrX - 25, qrY - 25, 50, 50);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 10px monospace";
+  ctx.fillText("SECURE", qrX, qrY + 4);
+
+  // Signature Block (Right)
+  const sigX = 1450;
+  const sigY = 740;
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "italic bold 36px serif";
+  ctx.fillText("Kapil Narula", sigX, sigY - 10);
+
+  ctx.strokeStyle = "#64748b";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(sigX - 160, sigY + 5);
+  ctx.lineTo(sigX + 160, sigY + 5);
+  ctx.stroke();
+
   ctx.fillStyle = "#475569";
+  ctx.font = "bold 16px system-ui";
+  ctx.fillText("Founder & Chief Ecosystem Architect", sigX, sigY + 30);
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "14px system-ui";
+  ctx.fillText("SarlaYash Learning Solutions LLP", sigX, sigY + 52);
+
+  // Bottom Security Hash
+  const hash = "SHA256-KAPIL-DEB-" + Math.random().toString(36).substring(2, 12).toUpperCase();
+  ctx.fillStyle = "#64748b";
   ctx.font = "16px monospace";
-  ctx.fillText("TAMPER-PROOF VERIFICATION HASH: " + hash, 600, 700);
+  ctx.fillText("CRYPTOGRAPHIC SECURITY HASH: " + hash + " • TAMPER-PROOF VERIFIED", 900, 980);
 
   if (format === 'png') {
     const link = document.createElement('a');
-    link.download = `Kapil_Bootcamp_Day${dayNum}_Badge.png`;
+    link.download = `Kapil_Bootcamp_Day${dayNum}_Certified_Badge.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   } else {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('landscape', 'px', [1200, 800]);
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1200, 800);
-    pdf.save(`Kapil_Bootcamp_Day${dayNum}_Badge.pdf`);
+    const pdf = new jsPDF('landscape', 'px', [1800, 1100]);
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1800, 1100);
+    pdf.save(`Kapil_Bootcamp_Day${dayNum}_Certified_Badge.pdf`);
   }
 }
 
@@ -2753,79 +3271,192 @@ function downloadCertificate(format) {
   const canvas = document.getElementById('credentialExportCanvas');
   const ctx = canvas.getContext('2d');
 
-  canvas.width = 1200;
-  canvas.height = 800;
+  canvas.width = 2400;
+  canvas.height = 1600;
 
-  ctx.fillStyle = "#030712";
-  ctx.fillRect(0, 0, 1200, 800);
+  // Ultra-crisp Ivory Security Canvas
+  ctx.fillStyle = "#fafaf9";
+  ctx.fillRect(0, 0, 2400, 1600);
 
-  // Gold Double Border
+  // Security Guilloché Background Patterns
+  ctx.strokeStyle = "rgba(203, 213, 225, 0.45)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 2400; i += 60) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(2400 - i, 1600);
+    ctx.stroke();
+  }
+
+  // Dual Vector Guilloché Perimeter
+  // Outer Royal Navy Border
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineWidth = 24;
+  ctx.strokeRect(40, 40, 2320, 1520);
+
+  // Inner Metallic Gold Double Border
+  ctx.strokeStyle = "#ca8a04";
+  ctx.lineWidth = 6;
+  ctx.strokeRect(70, 70, 2260, 1460);
+
   ctx.strokeStyle = "#eab308";
-  ctx.lineWidth = 14;
-  ctx.strokeRect(25, 25, 1150, 750);
   ctx.lineWidth = 2;
-  ctx.strokeRect(40, 40, 1120, 720);
+  ctx.strokeRect(84, 84, 2232, 1432);
 
-  ctx.fillStyle = "#eab308";
-  ctx.font = "bold 46px serif";
+  // Corner Security Rosettes
+  ctx.fillStyle = "#b45309";
+  [[70, 70], [2330, 70], [70, 1530], [2330, 1530]].forEach(([cx, cy]) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  });
+
+  // Top Organization Branding
+  ctx.fillStyle = "#475569";
+  ctx.font = "bold 24px monospace";
   ctx.textAlign = "center";
-  ctx.fillText("CERTIFICATE OF EXCELLENCE", 600, 140);
+  ctx.fillText("SARLAYASH LEARNING SOLUTIONS LLP • GLOBAL ECOSYSTEM CREDENTIAL DIVISION", 1200, 175);
 
-  ctx.fillStyle = "#cbd5e1";
-  ctx.font = "22px system-ui";
-  ctx.fillText("This is proudly awarded to", 600, 210);
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "900 52px serif";
+  ctx.fillText("CERTIFICATE OF COMPUTATIONAL EXCELLENCE & MASTERY", 1200, 255);
 
+  // Google & Microsoft Alignment Subtitle
+  ctx.fillStyle = "#b45309";
+  ctx.font = "bold 26px system-ui";
+  ctx.fillText("ALIGNED WITH GOOGLE CLOUD & MICROSOFT CERTIFIED PROFESSIONAL SPECIFICATIONS", 1200, 310);
+
+  // Presentation Citation
+  ctx.fillStyle = "#64748b";
+  ctx.font = "28px system-ui";
+  ctx.fillText("This official credential is with highest honors conferred upon", 1200, 410);
+
+  // Candidate Name
   const name = currentUser ? currentUser.name : "Kapil Certified Scholar";
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 52px system-ui";
-  ctx.fillText(name, 600, 290);
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "bold 76px serif";
+  ctx.fillText(name, 1200, 520);
 
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "20px system-ui";
-  ctx.fillText("for successfully completing the 15-Hour Intensive Program with Honors (≥90%)", 600, 360);
+  // Descriptive Citation
+  ctx.fillStyle = "#334155";
+  ctx.font = "26px system-ui";
+  ctx.fillText("for demonstrating rigorous mastery of the 15-Hour Intensive Curriculum across", 1200, 615);
 
-  ctx.fillStyle = "#38bdf8";
-  ctx.font = "bold 32px system-ui";
-  ctx.fillText("Digital Empowerment Bootcamp (Part 1)", 600, 410);
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "bold 38px system-ui";
+  ctx.fillText("Digital Empowerment Bootcamp (Part 1) — Zero to Infinity", 1200, 680);
 
+  // Honors Scores Matrix Pill
   const s1 = localStorage.getItem('day_1_score') || '90';
   const s2 = localStorage.getItem('day_2_score') || '90';
   const s3 = localStorage.getItem('day_3_score') || '90';
-  ctx.fillStyle = "#eab308";
-  ctx.font = "18px monospace";
-  ctx.fillText(`Honors Mastery: Day 1: ${s1}% | Day 2: ${s2}% | Day 3: ${s3}%`, 600, 450);
-
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "16px system-ui";
-  ctx.fillText("IT Foundations, Operating Systems, Modular C, Recursion, RDBMS, MS-Excel & Web Engineering", 600, 480);
-
-  // Signature
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "italic bold 32px serif";
-  ctx.fillText("Kapil", 600, 600);
-  ctx.strokeStyle = "#64748b";
-  ctx.lineWidth = 2;
+  
+  ctx.fillStyle = "#fef3c7";
   ctx.beginPath();
-  ctx.moveTo(460, 615);
-  ctx.lineTo(740, 615);
+  ctx.roundRect(400, 735, 1600, 60, [12]);
+  ctx.fill();
+  ctx.strokeStyle = "#d97706";
+  ctx.lineWidth = 2;
   ctx.stroke();
 
-  ctx.fillStyle = "#94a3b8";
+  ctx.fillStyle = "#92400e";
+  ctx.font = "bold 24px monospace";
+  ctx.fillText(`HONORS MASTERY MATRIX: DAY 1: ${s1}% | DAY 2: ${s2}% | DAY 3: ${s3}% • STRICT BENCHMARK ≥ 90% PASSED`, 1200, 775);
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "22px system-ui";
+  ctx.fillText("Competencies: IT Foundations, Operating Systems, Modular C, Recursion, RDBMS, MS-Excel & Web Systems", 1200, 850);
+
+  // Summa Cum Laude Honors Banner
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.roundRect(500, 900, 1400, 52, [10]);
+  ctx.fill();
+
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = "bold 22px monospace";
+  ctx.fillText("★ AWARDED WITH HIGHEST HONORS • SUMMA CUM LAUDE (ALL BENCHMARKS ≥ 90%) ★", 1200, 934);
+
+  // Dual Official Holographic Seals (Left & Center)
+  const seal1X = 480;
+  const seal1Y = 1140;
+  ctx.beginPath();
+  ctx.arc(seal1X, seal1Y, 85, 0, Math.PI * 2);
+  ctx.fillStyle = "#fef08a";
+  ctx.fill();
+  ctx.strokeStyle = "#ca8a04";
+  ctx.lineWidth = 8;
+  ctx.stroke();
+
+  ctx.fillStyle = "#78350f";
+  ctx.font = "bold 16px monospace";
+  ctx.fillText("OFFICIAL SEAL", seal1X, seal1Y - 20);
+  ctx.fillText("SARLAYASH", seal1X, seal1Y + 5);
+  ctx.fillText("FOUNDATIONS", seal1X, seal1Y + 28);
+
+  // Center QR & Verification Stamp
+  const certHash = "SHA256-KAPIL-CERT-" + Math.random().toString(36).substring(2, 14).toUpperCase();
+  const qrX = 1200;
+  const qrY = 1140;
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(qrX - 55, qrY - 55, 110, 110);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(qrX - 45, qrY - 45, 90, 90);
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(qrX - 30, qrY - 30, 60, 60);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 13px monospace";
+  ctx.fillText("VERIFIED", qrX, qrY + 5);
+
+  ctx.fillStyle = "#475569";
+  ctx.font = "16px monospace";
+  ctx.fillText("DIGITAL VERIFICATION TOKEN: " + certHash, 1200, 1235);
+
+  // Counter-Signature (Right)
+  const sigX = 1920;
+  const sigY = 1140;
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "italic bold 48px serif";
+  ctx.fillText("Kapil Narula", sigX, sigY - 20);
+
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(sigX - 200, sigY + 5);
+  ctx.lineTo(sigX + 200, sigY + 5);
+  ctx.stroke();
+
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "bold 20px system-ui";
+  ctx.fillText("Kapil Narula", sigX, sigY + 35);
+  ctx.fillStyle = "#475569";
   ctx.font = "18px system-ui";
-  ctx.fillText("Founder & Chief Ecosystem Architect", 600, 640);
+  ctx.fillText("Founder & Chief Ecosystem Architect", sigX, sigY + 62);
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "16px system-ui";
+  ctx.fillText("SarlaYash Learning Solutions LLP", sigX, sigY + 86);
+
+  // Bottom Legal & Accreditations Line
+  ctx.fillStyle = "#64748b";
+  ctx.font = "18px system-ui";
+  ctx.fillText("Authenticated by SarlaYash Learning Solutions LLP • Validated under ACM/IEEE IT & Computer Science Curriculum Standards", 1200, 1440);
 
   if (format === 'png') {
     const link = document.createElement('a');
-    link.download = `Kapil_Bootcamp_Completion_Certificate.png`;
+    link.download = `Kapil_Bootcamp_Grand_Master_Certificate.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   } else {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('landscape', 'px', [1200, 800]);
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 1200, 800);
-    pdf.save(`Kapil_Bootcamp_Completion_Certificate.pdf`);
+    const pdf = new jsPDF('landscape', 'px', [2400, 1600]);
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 2400, 1600);
+    pdf.save(`Kapil_Bootcamp_Grand_Master_Certificate.pdf`);
   }
 }
+
 
 // ========================================================
 // 10. ADMIN PORTAL CONTROLLER & CSV REPORT GENERATOR

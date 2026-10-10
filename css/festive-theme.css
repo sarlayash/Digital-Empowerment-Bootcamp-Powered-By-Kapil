@@ -1,0 +1,204 @@
+/* ========================================================
+   FESTIVE NAVRATRI THEME & RAINBOW UI/UX STYLESHEET
+   Digital Empowerment Bootcamp • Powered by Kapil
+   White Background • Rainbow Accents • Dark Collapsible Sidebar
+   Google & Microsoft Standard Credentials
+   ======================================================== */
+
+:root {
+  --primary-bg: #ffffff;
+  --secondary-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --sidebar-dark-bg: #0b0f19;
+  --sidebar-dark-hover: #172033;
+}
+
+/* Light / White Mode Base Defaults */
+body.festive-light {
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Rainbow Text Gradient Utility */
+.rainbow-text {
+  background: linear-gradient(135deg, #e11d48 0%, #ea580c 18%, #d97706 36%, #16a34a 54%, #0284c7 72%, #4f46e5 88%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.rainbow-text-vivid {
+  background: linear-gradient(90deg, #ff0055, #ff5500, #ffaa00, #00bb55, #0099ff, #7700ff, #ee00aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: rainbowFlow 6s linear infinite;
+}
+
+@keyframes rainbowFlow {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Rainbow Gradient Backgrounds */
+.rainbow-gradient-bg {
+  background: linear-gradient(135deg, #e11d48, #ea580c, #d97706, #16a34a, #0284c7, #4f46e5, #9333ea);
+}
+
+.rainbow-border {
+  border-image: linear-gradient(135deg, #e11d48, #ea580c, #d97706, #16a34a, #0284c7, #4f46e5, #9333ea) 1;
+}
+
+.rainbow-pill {
+  background: linear-gradient(135deg, #f43f5e 0%, #fb923c 25%, #fbbf24 50%, #34d399 75%, #60a5fa 100%);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Navratri Festive Traditional Accents */
+.navratri-banner {
+  background: linear-gradient(90deg, #b91c1c 0%, #c2410c 25%, #d97706 50%, #047857 75%, #4338ca 100%);
+  color: #ffffff;
+}
+
+.navratri-card-accent {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, #ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6) 1;
+}
+
+/* Dark Left Sidebar Layout & Transitions */
+#appSidebar {
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: width, transform;
+}
+
+#appSidebar.sidebar-expanded {
+  width: 270px;
+}
+
+#appSidebar.sidebar-collapsed {
+  width: 72px;
+}
+
+#appSidebar.sidebar-collapsed .sidebar-label,
+#appSidebar.sidebar-collapsed .sidebar-badge,
+#appSidebar.sidebar-collapsed .sidebar-section-header {
+  display: none !important;
+}
+
+#appSidebar.sidebar-collapsed .sidebar-nav-item {
+  justify-content: center;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+#appSidebar.sidebar-collapsed .sidebar-brand-text {
+  display: none !important;
+}
+
+/* Light Mode Card Shadows & Borders */
+.light-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+.light-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Collapsible Accordion Sections */
+.collapsible-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapsible-body {
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+  overflow: hidden;
+}
+
+.collapsible-body.is-collapsed {
+  max-height: 0 !important;
+  opacity: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Google & Microsoft Standard Credential Styling */
+.cert-guilloche-border {
+  border: 10px double #0f172a;
+  outline: 2px solid #d97706;
+  outline-offset: -6px;
+  background-color: #ffffff;
+}
+
+.official-seal-gold {
+  background: radial-gradient(circle at 30% 30%, #fef08a, #eab308, #ca8a04, #854d0e);
+  box-shadow: 0 4px 14px rgba(202, 138, 4, 0.45);
+}
+
+.official-seal-rainbow {
+  background: conic-gradient(from 180deg at 50% 50%, #f43f5e, #fb923c, #fbbf24, #34d399, #38bdf8, #818cf8, #c084fc, #f43f5e);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Festive Light Mode Workspace Enforcements */
+body.festive-light #mainViewArea .bg-slate-900:not(.keep-dark):not(pre):not(code),
+body.festive-light #mainViewArea .bg-slate-950:not(.keep-dark):not(pre):not(code) {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+body.festive-light #mainViewArea .border-slate-800:not(.keep-dark),
+body.festive-light #mainViewArea .border-slate-700:not(.keep-dark) {
+  border-color: #e2e8f0;
+}
+
+body.festive-light #mainViewArea .text-slate-400 {
+  color: #64748b;
+}
+
+body.festive-light #mainViewArea .text-slate-300 {
+  color: #334155;
+}
+
+body.festive-light #mainViewArea .text-slate-200 {
+  color: #1e293b;
+}
+
+body.festive-light #mainViewArea h1.text-white,
+body.festive-light #mainViewArea h2.text-white,
+body.festive-light #mainViewArea h3.text-white,
+body.festive-light #mainViewArea h4.text-white {
+  color: #0f172a;
+}
+
+/* Preserve white text for colorful CTA buttons */
+body.festive-light #mainViewArea .bg-indigo-600,
+body.festive-light #mainViewArea .bg-emerald-600,
+body.festive-light #mainViewArea .bg-rose-600,
+body.festive-light #mainViewArea .bg-teal-600,
+body.festive-light #mainViewArea button.rainbow-gradient-bg {
+  color: #ffffff !important;
+}
