@@ -37,7 +37,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 9:09 pm"
+    "last_active": "9 Oct 2026, 9:09 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "199SI0s9lqcJmJRUm3My5NeJ1IF3",
@@ -72,7 +77,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 7:46 pm"
+    "last_active": "9 Oct 2026, 7:46 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "2peT1aQW5wgiF4yBHGXNOvKs9lf1",
@@ -107,7 +117,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 10:08 pm"
+    "last_active": "9 Oct 2026, 10:08 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "37QnrpXLJ6ZjWdkSAlM0ynWQt1C3",
@@ -142,7 +157,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 3:17 pm"
+    "last_active": "9 Oct 2026, 3:17 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "3nqhba1g5thR0y02vvcGrF5bWsI2",
@@ -177,7 +197,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:26 pm"
+    "last_active": "10 Oct 2026, 3:26 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "5L8mS0XuGuUQ1sJQVdpaeuyDGdL2",
@@ -212,7 +237,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 8:14 pm"
+    "last_active": "9 Oct 2026, 8:14 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "8GV1h3oy54YZxe0Z7CyLNygtNiF3",
@@ -247,7 +277,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:31 pm"
+    "last_active": "10 Oct 2026, 3:31 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "9nStR0yJHwVRdokZHbJJFQRVnUZ2",
@@ -282,7 +317,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:26 pm"
+    "last_active": "10 Oct 2026, 3:26 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "BgrSBzIR5dV4FLyIPLexudueExp1",
@@ -317,7 +357,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:28 pm"
+    "last_active": "10 Oct 2026, 3:28 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "CNGHzSW7fVSldjiT2kEF4qH531a2",
@@ -352,7 +397,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 3:15 pm"
+    "last_active": "9 Oct 2026, 3:15 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "DaJnBEfqHKNAKzHOjXLTmlTwk3a2",
@@ -387,7 +437,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 9:23 pm"
+    "last_active": "9 Oct 2026, 9:23 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "ES7nLNRObNRnDT5V47veSsBzUve2",
@@ -422,7 +477,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 9:17 pm"
+    "last_active": "9 Oct 2026, 9:17 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "F5b9RGLtn7M0rZzlYUjl9teeAo03",
@@ -457,7 +517,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:38 pm"
+    "last_active": "10 Oct 2026, 3:38 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "Hq9dZ2L9tiZzUh7zThYn3cQlPlA2",
@@ -492,7 +557,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:31 pm"
+    "last_active": "10 Oct 2026, 3:31 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "Kh7kZFhsm3QyC7lm0cGmtf3zTwC2",
@@ -527,7 +597,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 7:41 pm"
+    "last_active": "9 Oct 2026, 7:41 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "LScF1oWFY5XTitj0OhnJXWMcOt52",
@@ -562,7 +637,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 3:19 pm"
+    "last_active": "9 Oct 2026, 3:19 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "NWBdMBZz7HPEiJnxn1UaAlXC4lJ3",
@@ -597,7 +677,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 8:07 pm"
+    "last_active": "9 Oct 2026, 8:07 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "Ny1F4tmiLVNtP8Gh4OSIeLsv2fR2",
@@ -632,7 +717,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 1,
     "level0_count": 25,
     "spin_prize": "+50 XP Boost",
-    "last_active": "Director Lead"
+    "last_active": "Director Lead",
+    "linkedinUrl": "https://www.linkedin.com/in/kapilnarula",
+    "githubUrl": "https://github.com/kapilnarula",
+    "foundations_count": 5,
+    "javadsa_count": 25,
+    "dbmsword_count": 10
   },
   {
     "uid": "OtTpsMiYYYYLbFoVddWcd8zODmY2",
@@ -667,7 +757,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 3:23 pm"
+    "last_active": "9 Oct 2026, 3:23 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "TdBrRtKd9sXOzP4v48D5rKo1uPA3",
@@ -702,7 +797,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 11:58 pm"
+    "last_active": "9 Oct 2026, 11:58 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "U95q6VriCPZSGcXxeq28M9xyPvl2",
@@ -737,7 +837,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 1:33 pm"
+    "last_active": "10 Oct 2026, 1:33 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "Zp5zd740h4S2UxA3N6cPzkjWV4G3",
@@ -772,7 +877,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:28 pm"
+    "last_active": "10 Oct 2026, 3:28 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "amhNLTHjJEQNEjFflILxzadfRAJ2",
@@ -807,7 +917,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 12:56 am"
+    "last_active": "10 Oct 2026, 12:56 am",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "cFaYm33QDdW4TZTaaNiSj9FisXg1",
@@ -842,7 +957,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:27 pm"
+    "last_active": "10 Oct 2026, 3:27 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "cMXs15iIxFNZRBE1Cpp8l4EhL4P2",
@@ -877,7 +997,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 8:08 pm"
+    "last_active": "9 Oct 2026, 8:08 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "hWebDBaWWQRzPyUerPANFX7Jgvk2",
@@ -912,7 +1037,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 10:23 am"
+    "last_active": "9 Oct 2026, 10:23 am",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "jiYJI1oAmUQQ9BUIEvsQ7JfxOuB3",
@@ -947,7 +1077,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 3:16 pm"
+    "last_active": "9 Oct 2026, 3:16 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "lEuqqUU8uuVjxExf2vCkwBlZbfh2",
@@ -982,7 +1117,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 12:19 am"
+    "last_active": "10 Oct 2026, 12:19 am",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "mH0S9fd4eEav5LJ6rXZJNoDMIo62",
@@ -1017,7 +1157,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 8:19 am"
+    "last_active": "10 Oct 2026, 8:19 am",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "ohKlBqoyZuh9w4gIBODuJ72J2k92",
@@ -1052,7 +1197,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 3:18 pm"
+    "last_active": "9 Oct 2026, 3:18 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "s2oa9gV264MfRz5ui8fSKslglBV2",
@@ -1087,7 +1237,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 12:25 am"
+    "last_active": "10 Oct 2026, 12:25 am",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "tsULRSgJfNXUE9M7Qt2K9oJMzmy2",
@@ -1122,7 +1277,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "9 Oct 2026, 10:16 pm"
+    "last_active": "9 Oct 2026, 10:16 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "uDmWQ80hofUyRQUy6kzjx56kaxv2",
@@ -1157,7 +1317,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:29 pm"
+    "last_active": "10 Oct 2026, 3:29 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "uqZSlQD5SlTvpah5WOt9kE64K3C3",
@@ -1192,7 +1357,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:29 pm"
+    "last_active": "10 Oct 2026, 3:29 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "vc5zv6UX8JSw96Hcp9uPlYmLdv92",
@@ -1227,7 +1397,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 8:21 am"
+    "last_active": "10 Oct 2026, 8:21 am",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "xX3XL9GrryQwsD16EyJz9cHpAJo1",
@@ -1262,7 +1437,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 8:20 am"
+    "last_active": "10 Oct 2026, 8:20 am",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   },
   {
     "uid": "y08i0nclg7b76W1ZCxr7kQT6YuG3",
@@ -1297,6 +1477,11 @@ window.FIREBASE_AUTH_ROSTER = [
     "mock5_attempts": 0,
     "level0_count": 0,
     "spin_prize": "Pending",
-    "last_active": "10 Oct 2026, 3:29 pm"
+    "last_active": "10 Oct 2026, 3:29 pm",
+    "linkedinUrl": "",
+    "githubUrl": "",
+    "foundations_count": 0,
+    "javadsa_count": 0,
+    "dbmsword_count": 0
   }
 ];

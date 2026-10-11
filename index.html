@@ -141,6 +141,11 @@
             <span class="sidebar-label truncate">Daily Spin Wheel</span>
           </button>
 
+          <button onclick="openLearnerProfileModal(); if (window.innerWidth < 768) toggleMobileSidebar(true);" class="sidebar-nav-item w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-cyan-300 hover:bg-[#172033] transition group" title="My Scholar Profile & URLs">
+            <i class="fa-solid fa-id-card text-cyan-400 text-sm group-hover:scale-110 transition shrink-0"></i>
+            <span class="sidebar-label truncate">Scholar Profile & URLs</span>
+          </button>
+
           <button onclick="openAdminPortal(); if (window.innerWidth < 768) toggleMobileSidebar(true);" class="sidebar-nav-item w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 transition group border border-rose-900/40" title="Admin Intelligence Portal">
             <i class="fa-solid fa-shield-halved text-rose-400 text-sm group-hover:scale-110 transition shrink-0"></i>
             <span class="sidebar-label truncate">Admin Portal</span>
@@ -256,10 +261,13 @@
                 <span>Google Sign-In</span>
               </button>
 
-              <div id="userProfile" class="hidden flex items-center space-x-2.5 cursor-pointer" onclick="triggerGoogleAuth()">
-                <img id="userAvatar" src="" class="w-8 h-8 rounded-full border border-indigo-400 shadow-sm" alt="Avatar">
+              <div id="userProfile" class="hidden flex items-center space-x-2.5 cursor-pointer p-1 rounded-xl hover:bg-slate-100 transition group" onclick="openLearnerProfileModal()" title="View & Edit Scholar Profile, Social URLs, and Live Progress">
+                <img id="userAvatar" src="" class="w-8 h-8 rounded-full border-2 border-indigo-500 shadow-sm group-hover:scale-105 transition" alt="Avatar">
                 <div class="text-left hidden md:block">
-                  <p id="userName" class="text-xs font-bold text-slate-800"></p>
+                  <p id="userName" class="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition flex items-center gap-1">
+                    <span id="userNameText">Scholar</span>
+                    <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 group-hover:text-indigo-600"></i>
+                  </p>
                   <p id="userEmail" class="text-[10px] text-slate-500"></p>
                 </div>
               </div>
@@ -312,6 +320,276 @@
       <p class="text-[11px] text-slate-500 text-center">
         Protected by session token authentication. Session expires upon closing or logging out.
       </p>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- LEARNER PROFILE & SOCIAL LINKS MODAL                     -->
+  <!-- Allows scholars to view profile & update LinkedIn / GitHub -->
+  <!-- ======================================================== -->
+  <div id="learnerProfileModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-5 md:p-7 shadow-2xl space-y-5 my-auto relative text-slate-800">
+      <button onclick="closeLearnerProfileModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-800 text-lg transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="flex items-center space-x-3.5 border-b border-slate-100 pb-4">
+        <img id="learnerProfileAvatar" src="" class="w-14 h-14 rounded-2xl border-2 border-indigo-500 shadow-md object-cover" alt="Profile Avatar">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h3 id="learnerProfileName" class="text-base md:text-lg font-black text-slate-900 truncate">Scholar Profile</h3>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono text-[10px] font-bold">VERIFIED SCHOLAR</span>
+          </div>
+          <p id="learnerProfileEmail" class="text-xs text-slate-500 truncate font-mono"></p>
+          <p id="learnerProfileLastLogin" class="text-[11px] text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>Last Active: <span class="font-semibold text-slate-600">--</span></p>
+        </div>
+      </div>
+
+      <!-- Professional Profile Links (LinkedIn & GitHub) -->
+      <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-share-nodes text-indigo-600"></i> Professional Portfolio Links
+          </label>
+          <span class="text-[10px] text-slate-500 font-mono">Syncs Live to Cloud Firestore</span>
+        </div>
+
+        <!-- LinkedIn URL -->
+        <div class="space-y-1">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-semibold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-brands fa-linkedin text-sky-600 text-sm"></i> LinkedIn Profile URL
+            </span>
+            <a id="learnerLinkedinPreviewBtn" href="#" target="_blank" class="hidden text-sky-600 hover:text-sky-700 font-bold text-[10px]">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Test Link
+            </a>
+          </div>
+          <input type="url" id="learnerLinkedinInput" placeholder="https://www.linkedin.com/in/your-profile" class="w-full bg-white border border-slate-300 text-xs text-slate-900 rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 font-sans shadow-sm transition">
+        </div>
+
+        <!-- GitHub URL -->
+        <div class="space-y-1">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-semibold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-brands fa-github text-slate-900 text-sm"></i> GitHub Profile URL
+            </span>
+            <a id="learnerGithubPreviewBtn" href="#" target="_blank" class="hidden text-indigo-600 hover:text-indigo-700 font-bold text-[10px]">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Test Link
+            </a>
+          </div>
+          <input type="url" id="learnerGithubInput" placeholder="https://github.com/your-username" class="w-full bg-white border border-slate-300 text-xs text-slate-900 rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 font-sans shadow-sm transition">
+        </div>
+
+        <!-- Save Button -->
+        <button id="saveLearnerProfileBtn" onclick="saveLearnerProfileLinks()" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Save & Sync URLs to Cloud
+        </button>
+      </div>
+
+      <!-- Real-Time Progress Matrix -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-pie text-amber-500"></i> Real Learning & Certification Status
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px]">
+          <div class="bg-indigo-50/70 border border-indigo-100 p-2.5 rounded-xl">
+            <p class="text-slate-500 text-[10px]">Day 1 Exam</p>
+            <p id="profileDay1Status" class="font-bold text-slate-800 mt-0.5">—</p>
+          </div>
+          <div class="bg-indigo-50/70 border border-indigo-100 p-2.5 rounded-xl">
+            <p class="text-slate-500 text-[10px]">Day 2 Exam</p>
+            <p id="profileDay2Status" class="font-bold text-slate-800 mt-0.5">—</p>
+          </div>
+          <div class="bg-indigo-50/70 border border-indigo-100 p-2.5 rounded-xl">
+            <p class="text-slate-500 text-[10px]">Day 3 Exam</p>
+            <p id="profileDay3Status" class="font-bold text-slate-800 mt-0.5">—</p>
+          </div>
+          <div class="bg-emerald-50/70 border border-emerald-100 p-2.5 rounded-xl">
+            <p class="text-emerald-700 text-[10px]">Certification</p>
+            <p id="profileCertStatus" class="font-bold text-emerald-800 mt-0.5">—</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px] pt-1">
+          <div class="bg-slate-100 border border-slate-200 p-2 rounded-xl">
+            <p class="text-slate-500 text-[10px]">Foundations Hub</p>
+            <p id="profileFoundationsStatus" class="font-bold text-slate-800 mt-0.5">0/5 Done</p>
+          </div>
+          <div class="bg-slate-100 border border-slate-200 p-2 rounded-xl">
+            <p class="text-slate-500 text-[10px]">Level 0 Labs</p>
+            <p id="profileLevel0Status" class="font-bold text-slate-800 mt-0.5">0/25 Done</p>
+          </div>
+          <div class="bg-slate-100 border border-slate-200 p-2 rounded-xl">
+            <p class="text-slate-500 text-[10px]">Java DSA Solved</p>
+            <p id="profileJavaDsaStatus" class="font-bold text-slate-800 mt-0.5">0/25 Done</p>
+          </div>
+          <div class="bg-slate-100 border border-slate-200 p-2 rounded-xl">
+            <p class="text-slate-500 text-[10px]">DBMS & Word Labs</p>
+            <p id="profileDbmsWordStatus" class="font-bold text-slate-800 mt-0.5">0/10 Done</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+        <button onclick="logoutGoogle(); closeLearnerProfileModal();" class="text-xs text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-rose-50 transition">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out Google
+        </button>
+        <button onclick="closeLearnerProfileModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+          Close Profile
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- ADMIN LEARNER DOSSIER DEEP INSPECTOR MODAL               -->
+  <!-- Complete 360-degree real-time view of any scholar        -->
+  <!-- ======================================================== -->
+  <div id="adminLearnerDossierModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-5 md:p-7 shadow-2xl space-y-5 my-auto relative text-slate-200">
+      <button onclick="closeAdminLearnerDossierModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Dossier Header -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div class="flex items-center space-x-3.5">
+          <img id="dossierAvatar" src="" class="w-14 h-14 rounded-2xl border-2 border-indigo-400 object-cover shadow-md" alt="Avatar">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="dossierName" class="text-base md:text-lg font-black text-white">Scholar Name</h3>
+              <span id="dossierCertBadge" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold">In Progress</span>
+            </div>
+            <p id="dossierEmail" class="text-xs text-slate-400 font-mono"></p>
+            <p id="dossierUid" class="text-[10px] text-slate-500 font-mono mt-0.5"></p>
+          </div>
+        </div>
+
+        <!-- Social Action Buttons -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <a id="dossierLinkedinLink" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 border border-sky-500/30 text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-brands fa-linkedin"></i> <span>LinkedIn</span>
+          </a>
+          <a id="dossierGithubLink" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-brands fa-github"></i> <span>GitHub</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Timestamps & Activity -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-950 p-3.5 rounded-2xl border border-slate-800 font-mono">
+        <div>
+          <span class="text-slate-500">Last Active / Login:</span>
+          <p id="dossierLastActive" class="text-emerald-400 font-bold mt-0.5">--</p>
+        </div>
+        <div>
+          <span class="text-slate-500">Account Registered:</span>
+          <p id="dossierCreatedAt" class="text-slate-300 font-bold mt-0.5">--</p>
+        </div>
+      </div>
+
+      <!-- 3 Day Main Exams Breakdown -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-graduation-cap text-indigo-400"></i> Main Examination Matrix (100 Questions Each • Pass: ≥90%)
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+          <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl space-y-1">
+            <p class="text-slate-400 font-semibold">Day 1 Exam (100Q)</p>
+            <p id="dossierDay1Score" class="text-base font-black font-mono text-white">—</p>
+            <p id="dossierDay1Meta" class="text-[10px] text-slate-500 font-mono">Attempts: 0</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl space-y-1">
+            <p class="text-slate-400 font-semibold">Day 2 Exam (100Q)</p>
+            <p id="dossierDay2Score" class="text-base font-black font-mono text-white">—</p>
+            <p id="dossierDay2Meta" class="text-[10px] text-slate-500 font-mono">Attempts: 0</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl space-y-1">
+            <p class="text-slate-400 font-semibold">Day 3 Exam (100Q)</p>
+            <p id="dossierDay3Score" class="text-base font-black font-mono text-white">—</p>
+            <p id="dossierDay3Meta" class="text-[10px] text-slate-500 font-mono">Attempts: 0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 Mock Assessments Breakdown -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-stopwatch text-teal-400"></i> 5 Mock Assessments (25 Questions Each • Pass: ≥90%)
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs text-center font-mono">
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Mock 1</p>
+            <p id="dossierMock1Score" class="font-black text-white mt-1">—</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Mock 2</p>
+            <p id="dossierMock2Score" class="font-black text-white mt-1">—</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Mock 3</p>
+            <p id="dossierMock3Score" class="font-black text-white mt-1">—</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Mock 4</p>
+            <p id="dossierMock4Score" class="font-black text-white mt-1">—</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Mock 5</p>
+            <p id="dossierMock5Score" class="font-black text-white mt-1">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module & Lab Completions -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-cubes text-amber-400"></i> Practical Lab & Module Completion Breakdown
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs text-center font-mono">
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Foundations Hub</p>
+            <p id="dossierFoundations" class="font-bold text-indigo-400 mt-1">0/5 Modules</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Level 0 Hardware</p>
+            <p id="dossierLevel0" class="font-bold text-amber-400 mt-1">0/25 Labs</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">Java DSA Solved</p>
+            <p id="dossierJavaDsa" class="font-bold text-emerald-400 mt-1">0/25 Progs</p>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+            <p class="text-slate-400 text-[10px]">DBMS & MS-Word</p>
+            <p id="dossierDbmsWord" class="font-bold text-cyan-400 mt-1">0/10 Labs</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="flex items-center justify-between border-t border-slate-800 pt-3">
+        <button onclick="copyDossierJson()" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-copy"></i> Copy Scholar JSON
+        </button>
+        <button onclick="closeAdminLearnerDossierModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition">
+          Close Dossier
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Live Toast Notification Container -->
+  <div id="appToastNotification" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-2 opacity-0">
+    <div id="toastIconContainer" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <div>
+      <p id="toastTitle" class="text-xs font-bold text-white"></p>
+      <p id="toastMessage" class="text-[11px] text-slate-300"></p>
     </div>
   </div>
 
@@ -1491,10 +1769,12 @@
 
           <!-- Status Filter -->
           <select id="adminStatusFilter" onchange="filterAdminLearnerTable()" class="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 font-sans">
-            <option value="all">All Scholars</option>
-            <option value="certified">Master Certified (All 3)</option>
+            <option value="all">All Scholars (37)</option>
+            <option value="certified">Master Certified (All 3 Exams)</option>
             <option value="passed_any">Passed ≥1 Exam</option>
             <option value="in_progress">In Progress</option>
+            <option value="has_linkedin">Has LinkedIn URL</option>
+            <option value="has_github">Has GitHub URL</option>
           </select>
         </div>
       </div>
@@ -1504,24 +1784,23 @@
         <table class="w-full text-left text-xs text-slate-300">
           <thead class="bg-slate-950/80 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
             <tr>
-              <th class="p-3">Scholar</th>
+              <th class="p-3">Scholar & Profiles</th>
               <th class="p-3 text-center">Day 1 (100Q)</th>
               <th class="p-3 text-center">Day 2 (100Q)</th>
               <th class="p-3 text-center">Day 3 (100Q)</th>
-              <th class="p-3 text-center text-teal-300">Mock 1 (25Q)</th>
-              <th class="p-3 text-center text-teal-300">Mock 2 (25Q)</th>
-              <th class="p-3 text-center text-teal-300">Mock 3 (25Q)</th>
-              <th class="p-3 text-center text-teal-300">Mock 4 (25Q)</th>
-              <th class="p-3 text-center text-teal-300">Mock 5 (25Q)</th>
-              <th class="p-3 text-center">Level 0 Lab</th>
-              <th class="p-3 text-center">Daily Spin</th>
-              <th class="p-3 text-center">Milestone Status</th>
-              <th class="p-3 text-right">Last Active</th>
+              <th class="p-3 text-center text-teal-300">Mock Series (5)</th>
+              <th class="p-3 text-center text-indigo-300">Foundations (5)</th>
+              <th class="p-3 text-center text-amber-300">Level 0 (25)</th>
+              <th class="p-3 text-center text-emerald-300">Java DSA (25)</th>
+              <th class="p-3 text-center text-cyan-300">DBMS/Word (10)</th>
+              <th class="p-3 text-center">Milestone</th>
+              <th class="p-3 text-center">Last Login Time</th>
+              <th class="p-3 text-center">Action</th>
             </tr>
           </thead>
           <tbody id="adminLearnerTableBody" class="divide-y divide-slate-800">
             <tr>
-              <td colspan="13" class="p-6 text-center text-slate-500">
+              <td colspan="12" class="p-6 text-center text-slate-500">
                 <i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading real-time learner records...
               </td>
             </tr>

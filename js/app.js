@@ -347,16 +347,77 @@ function fallbackSimulationAuth(errReason) {
   alert(`✅ Google Account Verified!\nWelcome, ${currentUser.name}.\nYour Journey Page is now completely unlocked!`);
 }
 
+// Persistence Sets for Practical Module Completion Tracking
+let javaDsaCompletedSet = new Set();
+try {
+  const savedJava = localStorage.getItem('javadsa_completed_set');
+  if (savedJava) javaDsaCompletedSet = new Set(JSON.parse(savedJava));
+} catch(e) {}
+
+let dbmsWordCompletedSet = new Set();
+try {
+  const savedDbms = localStorage.getItem('dbmsword_completed_set');
+  if (savedDbms) dbmsWordCompletedSet = new Set(JSON.parse(savedDbms));
+} catch(e) {}
+
+// Global Toast Notification Helper
+function showToastNotification(title, message, isSuccess = true) {
+  const toast = document.getElementById('appToastNotification');
+  if (!toast) return;
+  const titleEl = document.getElementById('toastTitle');
+  const msgEl = document.getElementById('toastMessage');
+  const iconBox = document.getElementById('toastIconContainer');
+
+  if (titleEl) titleEl.innerText = title;
+  if (msgEl) msgEl.innerText = message;
+  if (iconBox) {
+    iconBox.innerHTML = isSuccess ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-circle-exclamation"></i>';
+    iconBox.className = isSuccess 
+      ? 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0'
+      : 'w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm shrink-0';
+  }
+
+  toast.classList.remove('hidden');
+  setTimeout(() => {
+    toast.classList.remove('opacity-0', 'translate-y-2');
+    toast.classList.add('opacity-100', 'translate-y-0');
+  }, 10);
+
+  setTimeout(() => {
+    toast.classList.remove('opacity-100', 'translate-y-0');
+    toast.classList.add('opacity-0', 'translate-y-2');
+    setTimeout(() => toast.classList.add('hidden'), 350);
+  }, 4000);
+}
+
 async function syncUserWithFirestore(user) {
   if (!window.db || !user) return;
   try {
-    await window.db.collection('learners').doc(user.uid).set({
-      name: user.name || user.displayName || currentUser.name,
+    const fCount = typeof foundationsSubmitted !== 'undefined' ? Object.values(foundationsSubmitted).filter(Boolean).length : 0;
+    const l0Count = completedLevel0Ids ? completedLevel0Ids.size : 0;
+    const javaCount = javaDsaCompletedSet ? javaDsaCompletedSet.size : 0;
+    const dbmsCount = dbmsWordCompletedSet ? dbmsWordCompletedSet.size : 0;
+
+    const payload = {
+      name: user.name || user.displayName || (currentUser ? currentUser.name : 'Scholar'),
       email: user.email,
-      photoURL: user.avatar || user.photoURL || currentUser.avatar,
-      lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    console.log("Learner profile synced to Cloud Firestore:", user.email);
+      photoURL: user.avatar || user.photoURL || (currentUser ? currentUser.avatar : ''),
+      lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+      lastSignedInAt: String(Date.now()),
+      last_active: new Date().toLocaleString(),
+      foundations_count: fCount,
+      level0_count: l0Count,
+      javadsa_count: javaCount,
+      dbmsword_count: dbmsCount
+    };
+
+    const savedLinkedin = user.linkedinUrl || localStorage.getItem(`learner_linkedin_${user.email}`);
+    const savedGithub = user.githubUrl || localStorage.getItem(`learner_github_${user.email}`);
+    if (savedLinkedin) payload.linkedinUrl = savedLinkedin;
+    if (savedGithub) payload.githubUrl = savedGithub;
+
+    await window.db.collection('learners').doc(user.uid).set(payload, { merge: true });
+    console.log("Learner profile & telemetry synced to Cloud Firestore:", user.email);
   } catch (e) {
     console.warn("Firestore sync non-fatal note:", e);
   }
@@ -368,6 +429,20 @@ async function loadLearnerProgressFromFirestore(uid) {
     const doc = await window.db.collection('learners').doc(uid).get();
     if (doc.exists) {
       const data = doc.data();
+
+      // Sync Professional Profile URLs
+      if (currentUser) {
+        if (data.linkedinUrl) {
+          currentUser.linkedinUrl = data.linkedinUrl;
+          localStorage.setItem(`learner_linkedin_${currentUser.email}`, data.linkedinUrl);
+        }
+        if (data.githubUrl) {
+          currentUser.githubUrl = data.githubUrl;
+          localStorage.setItem(`learner_github_${currentUser.email}`, data.githubUrl);
+        }
+        localStorage.setItem('kapil_bootcamp_user', JSON.stringify(currentUser));
+      }
+
       [1, 2, 3].forEach(d => {
         if (data[`day_${d}_passed`]) localStorage.setItem(`day_${d}_passed`, 'true');
         if (data[`day_${d}_score`] !== undefined) localStorage.setItem(`day_${d}_score`, String(data[`day_${d}_score`]));
@@ -381,6 +456,26 @@ async function loadLearnerProgressFromFirestore(uid) {
         updateLevel0ProgressUI();
         renderLevel0ExerciseList();
       }
+
+      // Sync Foundations Hub modules
+      if (data.foundations_modules && typeof data.foundations_modules === 'object') {
+        foundationsSubmitted = { ...foundationsSubmitted, ...data.foundations_modules };
+        localStorage.setItem('foundations_completed_modules', JSON.stringify(foundationsSubmitted));
+        if (typeof renderFoundationsPills === 'function') renderFoundationsPills();
+      }
+
+      // Sync Java DSA Solved Programs
+      if (data.javadsa_completed && Array.isArray(data.javadsa_completed)) {
+        javaDsaCompletedSet = new Set(data.javadsa_completed);
+        localStorage.setItem('javadsa_completed_set', JSON.stringify(data.javadsa_completed));
+      }
+
+      // Sync DBMS & MS-Word Labs
+      if (data.dbmsword_completed && Array.isArray(data.dbmsword_completed)) {
+        dbmsWordCompletedSet = new Set(data.dbmsword_completed);
+        localStorage.setItem('dbmsword_completed_set', JSON.stringify(data.dbmsword_completed));
+      }
+
       // Sync spin history
       for (let d = 1; d <= 3; d++) {
         try {
@@ -391,6 +486,7 @@ async function loadLearnerProgressFromFirestore(uid) {
           }
         } catch (spinErr) {}
       }
+
       // Sync 5 Mock Assessments progress
       for (let m = 1; m <= 5; m++) {
         if (data[`mock_${m}_score`] !== undefined) localStorage.setItem(`mock_${m}_score`, String(data[`mock_${m}_score`]));
@@ -410,6 +506,159 @@ async function loadLearnerProgressFromFirestore(uid) {
   }
 }
 
+function openLearnerProfileModal() {
+  if (!currentUser) {
+    if (confirm("Please sign in with your Google account to manage your scholar profile and update your LinkedIn & GitHub URLs. Sign in now?")) {
+      triggerGoogleAuth();
+    }
+    return;
+  }
+
+  const modal = document.getElementById('learnerProfileModal');
+  if (!modal) return;
+
+  const avatarEl = document.getElementById('learnerProfileAvatar');
+  const nameEl = document.getElementById('learnerProfileName');
+  const emailEl = document.getElementById('learnerProfileEmail');
+  const lastLoginEl = document.getElementById('learnerProfileLastLogin');
+  const linkedinInput = document.getElementById('learnerLinkedinInput');
+  const githubInput = document.getElementById('learnerGithubInput');
+  const linkedinPrev = document.getElementById('learnerLinkedinPreviewBtn');
+  const githubPrev = document.getElementById('learnerGithubPreviewBtn');
+
+  if (avatarEl) avatarEl.src = currentUser.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser.name)}&backgroundColor=4f46e5`;
+  if (nameEl) nameEl.innerText = currentUser.name;
+  if (emailEl) emailEl.innerText = currentUser.email;
+
+  const activeTime = currentUser.loginTimestamp ? new Date(currentUser.loginTimestamp).toLocaleString() : new Date().toLocaleString();
+  if (lastLoginEl) lastLoginEl.innerHTML = `<i class="fa-regular fa-clock mr-1"></i>Last Active: <span class="font-semibold text-slate-700">${activeTime}</span>`;
+
+  const savedLinkedin = currentUser.linkedinUrl || localStorage.getItem(`learner_linkedin_${currentUser.email}`) || '';
+  const savedGithub = currentUser.githubUrl || localStorage.getItem(`learner_github_${currentUser.email}`) || '';
+
+  if (linkedinInput) linkedinInput.value = savedLinkedin;
+  if (githubInput) githubInput.value = savedGithub;
+
+  if (linkedinPrev) {
+    if (savedLinkedin) {
+      linkedinPrev.href = savedLinkedin;
+      linkedinPrev.classList.remove('hidden');
+    } else {
+      linkedinPrev.classList.add('hidden');
+    }
+  }
+
+  if (githubPrev) {
+    if (savedGithub) {
+      githubPrev.href = savedGithub;
+      githubPrev.classList.remove('hidden');
+    } else {
+      githubPrev.classList.add('hidden');
+    }
+  }
+
+  // Populate Real Learning Progress in Profile Modal
+  const d1p = localStorage.getItem('day_1_passed') === 'true';
+  const d1s = localStorage.getItem('day_1_score');
+  const d2p = localStorage.getItem('day_2_passed') === 'true';
+  const d2s = localStorage.getItem('day_2_score');
+  const d3p = localStorage.getItem('day_3_passed') === 'true';
+  const d3s = localStorage.getItem('day_3_score');
+
+  const pD1 = document.getElementById('profileDay1Status');
+  const pD2 = document.getElementById('profileDay2Status');
+  const pD3 = document.getElementById('profileDay3Status');
+  const pCert = document.getElementById('profileCertStatus');
+
+  if (pD1) pD1.innerHTML = d1s ? `<span class="${d1p ? 'text-emerald-600 font-black' : 'text-rose-600 font-black'}">${d1s}/100 (${d1p ? 'PASS' : 'RETRY'})</span>` : '— Not Taken —';
+  if (pD2) pD2.innerHTML = d2s ? `<span class="${d2p ? 'text-emerald-600 font-black' : 'text-rose-600 font-black'}">${d2s}/100 (${d2p ? 'PASS' : 'RETRY'})</span>` : '— Not Taken —';
+  if (pD3) pD3.innerHTML = d3s ? `<span class="${d3p ? 'text-emerald-600 font-black' : 'text-rose-600 font-black'}">${d3s}/100 (${d3p ? 'PASS' : 'RETRY'})</span>` : '— Not Taken —';
+
+  const isMasterCert = Boolean(d1p && d2p && d3p);
+  if (pCert) pCert.innerHTML = isMasterCert ? '<span class="text-amber-600 font-black">👑 Master Certified</span>' : '<span class="text-slate-500">In Progress</span>';
+
+  // Modules counts
+  let fCount = typeof foundationsSubmitted !== 'undefined' ? Object.values(foundationsSubmitted).filter(Boolean).length : 0;
+  let l0Count = completedLevel0Ids ? completedLevel0Ids.size : 0;
+  let javaCount = javaDsaCompletedSet ? javaDsaCompletedSet.size : 0;
+  let dbmsCount = dbmsWordCompletedSet ? dbmsWordCompletedSet.size : 0;
+
+  const pF = document.getElementById('profileFoundationsStatus');
+  const pL0 = document.getElementById('profileLevel0Status');
+  const pJava = document.getElementById('profileJavaDsaStatus');
+  const pDbms = document.getElementById('profileDbmsWordStatus');
+
+  if (pF) pF.innerText = `${fCount}/5 Modules`;
+  if (pL0) pL0.innerText = `${l0Count}/25 Labs`;
+  if (pJava) pJava.innerText = `${javaCount}/25 Progs`;
+  if (pDbms) pDbms.innerText = `${dbmsCount}/10 Labs`;
+
+  modal.classList.remove('hidden');
+}
+
+function closeLearnerProfileModal() {
+  const modal = document.getElementById('learnerProfileModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function saveLearnerProfileLinks() {
+  if (!currentUser) {
+    alert("Please sign in first.");
+    return;
+  }
+
+  const linkedinInput = document.getElementById('learnerLinkedinInput');
+  const githubInput = document.getElementById('learnerGithubInput');
+  let linkedinVal = linkedinInput ? linkedinInput.value.trim() : '';
+  let githubVal = githubInput ? githubInput.value.trim() : '';
+
+  if (linkedinVal && !linkedinVal.startsWith('http://') && !linkedinVal.startsWith('https://')) {
+    linkedinVal = 'https://' + linkedinVal;
+    if (linkedinInput) linkedinInput.value = linkedinVal;
+  }
+  if (githubVal && !githubVal.startsWith('http://') && !githubVal.startsWith('https://')) {
+    githubVal = 'https://' + githubVal;
+    if (githubInput) githubInput.value = githubVal;
+  }
+
+  currentUser.linkedinUrl = linkedinVal;
+  currentUser.githubUrl = githubVal;
+  localStorage.setItem('kapil_bootcamp_user', JSON.stringify(currentUser));
+  localStorage.setItem(`learner_linkedin_${currentUser.email}`, linkedinVal);
+  localStorage.setItem(`learner_github_${currentUser.email}`, githubVal);
+
+  const saveBtn = document.getElementById('saveLearnerProfileBtn');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing to Cloud...';
+  }
+
+  try {
+    if (window.db && currentUser.uid) {
+      await window.db.collection('learners').doc(currentUser.uid).set({
+        linkedinUrl: linkedinVal,
+        githubUrl: githubVal,
+        last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+        last_active: new Date().toLocaleString()
+      }, { merge: true });
+    }
+    showToastNotification("Profile URLs Saved", "LinkedIn and GitHub URLs synced to Firestore in real time!");
+    closeLearnerProfileModal();
+    if (typeof loadAdminDashboardData === 'function') {
+      loadAdminDashboardData();
+    }
+  } catch (err) {
+    console.error("Firestore save notice:", err);
+    showToastNotification("Saved Locally", "Saved to local profile. Cloud notice: " + err.message, false);
+    closeLearnerProfileModal();
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i> Save & Sync URLs to Cloud';
+    }
+  }
+}
+
 function logoutGoogle() {
   if (window.auth) {
     window.auth.signOut().catch(e => console.error(e));
@@ -418,7 +667,7 @@ function logoutGoogle() {
   localStorage.removeItem('kapil_bootcamp_user');
   updateUserUI();
   updateAppScreenState();
-  alert("Signed out successfully.");
+  showToastNotification("Signed Out", "You have signed out from Google account.");
 }
 
 function loadSavedUser() {
@@ -437,26 +686,24 @@ function updateUserUI() {
   const googleBtn = document.getElementById('googleSignInBtn');
   const userProfile = document.getElementById('userProfile');
   const userNameEl = document.getElementById('userName');
+  const userNameTextEl = document.getElementById('userNameText');
   const userEmailEl = document.getElementById('userEmail');
   const userAvatarEl = document.getElementById('userAvatar');
 
   if (currentUser) {
     if (googleBtn) googleBtn.classList.add('hidden');
     if (userProfile) userProfile.classList.remove('hidden');
-    if (userNameEl) userNameEl.innerText = currentUser.name;
+    if (userNameTextEl) {
+      userNameTextEl.innerText = currentUser.name;
+    } else if (userNameEl) {
+      userNameEl.innerText = currentUser.name;
+    }
     if (userEmailEl) userEmailEl.innerText = currentUser.email;
     if (userAvatarEl) userAvatarEl.src = currentUser.avatar;
   } else {
     if (googleBtn) googleBtn.classList.remove('hidden');
     if (userProfile) userProfile.classList.add('hidden');
   }
-}
-
-function logoutGoogle() {
-  currentUser = null;
-  localStorage.removeItem('kapil_bootcamp_user');
-  updateUserUI();
-  alert("Signed out successfully.");
 }
 
 // 3. 24/7 Open Access Monitor (No 8am-8pm window restriction)
@@ -884,6 +1131,10 @@ function submitKnowledgeCheck(moduleId) {
   }
 
   foundationsSubmitted[moduleId] = true;
+  localStorage.setItem('foundations_completed_modules', JSON.stringify(foundationsSubmitted));
+  const fCount = Object.values(foundationsSubmitted).filter(Boolean).length;
+  localStorage.setItem('foundations_completed_count', String(fCount));
+
   renderFoundationsPills();
   renderFoundationsActiveModule();
 
@@ -894,6 +1145,23 @@ function submitKnowledgeCheck(moduleId) {
   });
   if (correct >= 4 && window.confetti) {
     window.confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+  }
+
+  showToastNotification("Module Checkpoint Completed", `Scored ${correct}/5 on ${mod.title} • Synced to Cloud!`);
+
+  // Sync real-time to Cloud Firestore
+  if (currentUser && currentUser.uid && window.db) {
+    try {
+      window.db.collection('learners').doc(currentUser.uid).set({
+        foundations_modules: foundationsSubmitted,
+        foundations_count: fCount,
+        last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+        last_active: new Date().toLocaleString()
+      }, { merge: true });
+      console.log(`Foundations module ${moduleId} synced to Firestore for user:`, currentUser.email);
+    } catch (e) {
+      console.warn("Firestore foundations sync non-fatal note:", e);
+    }
   }
 }
 
@@ -1313,6 +1581,20 @@ function sendJavaDsaToCloudIde(progId) {
 
   switchTab('ide');
 
+  // Track completion and sync to Firestore
+  javaDsaCompletedSet.add(progId);
+  localStorage.setItem('javadsa_completed_set', JSON.stringify(Array.from(javaDsaCompletedSet)));
+  if (currentUser && currentUser.uid && window.db) {
+    try {
+      window.db.collection('learners').doc(currentUser.uid).set({
+        javadsa_completed: Array.from(javaDsaCompletedSet),
+        javadsa_count: javaDsaCompletedSet.size,
+        last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+        last_active: new Date().toLocaleString()
+      }, { merge: true }).catch(() => {});
+    } catch(e) {}
+  }
+
   const terminal = document.getElementById('codeTerminalOutput');
   if (terminal) {
     terminal.innerText = `// Loaded Java DSA ${prog.title}\n// Ready to compile! Click 'Run / Compile Code' above.\n`;
@@ -1468,6 +1750,16 @@ function runCurrentDbmsWordExercise() {
   if (outEl) {
     try {
       outEl.innerHTML = ex.run(vals);
+      dbmsWordCompletedSet.add(currentDbmsWordId);
+      localStorage.setItem('dbmsword_completed_set', JSON.stringify(Array.from(dbmsWordCompletedSet)));
+      if (currentUser && currentUser.uid && window.db) {
+        window.db.collection('learners').doc(currentUser.uid).set({
+          dbmsword_completed: Array.from(dbmsWordCompletedSet),
+          dbmsword_count: dbmsWordCompletedSet.size,
+          last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+          last_active: new Date().toLocaleString()
+        }, { merge: true }).catch(() => {});
+      }
     } catch (err) {
       outEl.innerHTML = `<div class="p-3 bg-rose-950/40 text-rose-300 text-xs">Error: ${err.message}</div>`;
     }
@@ -3564,6 +3856,9 @@ function updateAdminSyncCountdownUI() {
   }
 }
 
+let adminFirestoreUnsubscribe = null;
+let currentInspectedScholar = null;
+
 function showAdminDashboard() {
   const founderModal = document.getElementById('founderNoteModal');
   const loginGate = document.getElementById('loginGateScreen');
@@ -3581,11 +3876,16 @@ function showAdminDashboard() {
   }
 
   loadAdminDashboardData();
+  setupAdminRealtimeSync();
   startAdminAutoSync();
 }
 
 function exitAdminToWorkspace() {
   stopAdminAutoSync();
+  if (adminFirestoreUnsubscribe) {
+    adminFirestoreUnsubscribe();
+    adminFirestoreUnsubscribe = null;
+  }
   const adminScreen = document.getElementById('adminDashboardScreen');
   if (adminScreen) adminScreen.classList.add('hidden');
   updateAppScreenState();
@@ -3593,9 +3893,89 @@ function exitAdminToWorkspace() {
 
 function adminLogout() {
   stopAdminAutoSync();
+  if (adminFirestoreUnsubscribe) {
+    adminFirestoreUnsubscribe();
+    adminFirestoreUnsubscribe = null;
+  }
   sessionStorage.removeItem('kapil_admin_token');
   exitAdminToWorkspace();
-  alert("Logged out from Administrative Hub.");
+  showToastNotification("Logged Out", "Logged out from Administrative Intelligence Hub.");
+}
+
+function setupAdminRealtimeSync() {
+  if (adminFirestoreUnsubscribe) {
+    adminFirestoreUnsubscribe();
+    adminFirestoreUnsubscribe = null;
+  }
+
+  if (!window.db) return;
+
+  try {
+    adminFirestoreUnsubscribe = window.db.collection('learners').onSnapshot((snapshot) => {
+      console.log(`Live Firestore update received! Updating admin dashboard (${snapshot.size} docs)...`);
+      applyFirestoreSnapshotToAdmin(snapshot);
+    }, (err) => {
+      console.warn("Firestore onSnapshot error:", err);
+    });
+  } catch (err) {
+    console.warn("Firestore onSnapshot subscription failed:", err);
+  }
+}
+
+function applyFirestoreSnapshotToAdmin(snapshot) {
+  if (!snapshot || !adminLearnersData || adminLearnersData.length === 0) return;
+
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    const emailKey = (d.email || '').toLowerCase();
+    const docId = doc.id;
+
+    // Find scholar in adminLearnersData by email or by UID
+    let scholar = adminLearnersData.find(s => (s.email && s.email.toLowerCase() === emailKey) || s.uid === docId);
+    if (scholar) {
+      if (d.name) scholar.name = d.name;
+      if (d.photoURL || d.photoUrl) scholar.photoUrl = d.photoURL || d.photoUrl;
+      if (d.linkedinUrl !== undefined) scholar.linkedinUrl = d.linkedinUrl;
+      if (d.githubUrl !== undefined) scholar.githubUrl = d.githubUrl;
+
+      if (d.day_1_score !== undefined) scholar.day1_score = Number(d.day_1_score);
+      if (d.day_1_passed !== undefined) scholar.day1_passed = Boolean(d.day_1_passed);
+      if (d.day_1_attempts !== undefined) scholar.day1_attempts = Number(d.day_1_attempts);
+
+      if (d.day_2_score !== undefined) scholar.day2_score = Number(d.day_2_score);
+      if (d.day_2_passed !== undefined) scholar.day2_passed = Boolean(d.day_2_passed);
+      if (d.day_2_attempts !== undefined) scholar.day2_attempts = Number(d.day_2_attempts);
+
+      if (d.day_3_score !== undefined) scholar.day3_score = Number(d.day_3_score);
+      if (d.day_3_passed !== undefined) scholar.day3_passed = Boolean(d.day_3_passed);
+      if (d.day_3_attempts !== undefined) scholar.day3_attempts = Number(d.day_3_attempts);
+
+      for (let m = 1; m <= 5; m++) {
+        if (d[`mock_${m}_score`] !== undefined) scholar[`mock${m}_score`] = Number(d[`mock_${m}_score`]);
+        if (d[`mock_${m}_passed`] !== undefined) scholar[`mock${m}_passed`] = Boolean(d[`mock_${m}_passed`]);
+        if (d[`mock_${m}_attempts`] !== undefined) scholar[`mock${m}_attempts`] = Number(d[`mock_${m}_attempts`]);
+      }
+
+      if (d.foundations_count !== undefined) scholar.foundations_count = Number(d.foundations_count);
+      if (d.level0_count !== undefined) scholar.level0_count = Number(d.level0_count);
+      if (d.javadsa_count !== undefined) scholar.javadsa_count = Number(d.javadsa_count);
+      if (d.dbmsword_count !== undefined) scholar.dbmsword_count = Number(d.dbmsword_count);
+
+      if (d.last_updated) {
+        scholar.last_active = d.last_updated.toDate ? d.last_updated.toDate().toLocaleString() : String(d.last_updated);
+      } else if (d.lastLogin) {
+        scholar.last_active = d.lastLogin.toDate ? d.lastLogin.toDate().toLocaleString() : String(d.lastLogin);
+      }
+    }
+  });
+
+  updateAdminMetrics();
+  filterAdminLearnerTable();
+
+  const syncLabel = document.getElementById('adminLastSyncedLabel');
+  if (syncLabel) {
+    syncLabel.innerText = `Live sub-second sync active • Last update: ${new Date().toLocaleTimeString()}`;
+  }
 }
 
 async function loadAdminDashboardData() {
@@ -3606,7 +3986,7 @@ async function loadAdminDashboardData() {
   if (tableBody) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="13" class="p-8 text-center text-slate-400">
+        <td colspan="12" class="p-8 text-center text-slate-400">
           <i class="fa-solid fa-spinner fa-spin mr-2 text-indigo-400"></i> Fetching real-time learner telemetry from Google Cloud Firestore...
         </td>
       </tr>
@@ -3622,9 +4002,7 @@ async function loadAdminDashboardData() {
         window.FIREBASE_AUTH_ROSTER = rosterJson;
       }
     }
-  } catch (err) {
-    // Graceful fallback to embedded script
-  }
+  } catch (err) {}
 
   const learnersMap = new Map();
   const baseRoster = getFirebaseAuthRoster();
@@ -3647,6 +4025,12 @@ async function loadAdminDashboardData() {
       mock5_score: item.mock5_score ?? null,
       mock5_passed: item.mock5_passed ?? false,
       mock5_attempts: item.mock5_attempts ?? 0,
+      foundations_count: item.foundations_count ?? 0,
+      level0_count: item.level0_count ?? 0,
+      javadsa_count: item.javadsa_count ?? 0,
+      dbmsword_count: item.dbmsword_count ?? 0,
+      linkedinUrl: item.linkedinUrl ?? '',
+      githubUrl: item.githubUrl ?? '',
       ...item
     });
   });
@@ -3659,7 +4043,6 @@ async function loadAdminDashboardData() {
         const d = doc.data();
         const emailKey = (d.email || '').toLowerCase();
         
-        // Find existing record by email or by UID
         let existing = null;
         if (emailKey && learnersMap.has(emailKey)) {
           existing = learnersMap.get(emailKey);
@@ -3676,6 +4059,9 @@ async function loadAdminDashboardData() {
           uid: doc.id || (existing ? existing.uid : 'USR_' + Math.random().toString(36).substr(2, 6)),
           name: d.name || (existing ? existing.name : 'Scholar'),
           email: d.email || (existing ? existing.email : 'N/A'),
+          photoUrl: d.photoURL || d.photoUrl || (existing ? existing.photoUrl : ''),
+          linkedinUrl: d.linkedinUrl !== undefined ? d.linkedinUrl : (existing ? existing.linkedinUrl : ''),
+          githubUrl: d.githubUrl !== undefined ? d.githubUrl : (existing ? existing.githubUrl : ''),
           day1_score: d.day_1_score !== undefined ? Number(d.day_1_score) : (existing ? existing.day1_score : null),
           day1_passed: d.day_1_passed !== undefined ? Boolean(d.day_1_passed) : Boolean(existing ? existing.day1_passed : false),
           day1_attempts: Number(d.day_1_attempts || (existing ? existing.day1_attempts : 0)),
@@ -3685,7 +4071,6 @@ async function loadAdminDashboardData() {
           day3_score: d.day_3_score !== undefined ? Number(d.day_3_score) : (existing ? existing.day3_score : null),
           day3_passed: d.day_3_passed !== undefined ? Boolean(d.day_3_passed) : Boolean(existing ? existing.day3_passed : false),
           day3_attempts: Number(d.day_3_attempts || (existing ? existing.day3_attempts : 0)),
-          // 5 Mock Assessments Telemetry
           mock1_score: d.mock_1_score !== undefined ? Number(d.mock_1_score) : (existing ? existing.mock1_score : null),
           mock1_passed: d.mock_1_passed !== undefined ? Boolean(d.mock_1_passed) : Boolean(existing ? existing.mock1_passed : false),
           mock1_attempts: Number(d.mock_1_attempts || (existing ? existing.mock1_attempts : 0)),
@@ -3701,7 +4086,11 @@ async function loadAdminDashboardData() {
           mock5_score: d.mock_5_score !== undefined ? Number(d.mock_5_score) : (existing ? existing.mock5_score : null),
           mock5_passed: d.mock_5_passed !== undefined ? Boolean(d.mock_5_passed) : Boolean(existing ? existing.mock5_passed : false),
           mock5_attempts: Number(d.mock_5_attempts || (existing ? existing.mock5_attempts : 0)),
+          foundations_count: Number(d.foundations_count !== undefined ? d.foundations_count : (existing ? existing.foundations_count : 0)),
           level0_count: Number(d.level0_count || (Array.isArray(d.level0_completed) ? d.level0_completed.length : (existing ? existing.level0_count : 0))),
+          javadsa_count: Number(d.javadsa_count || (Array.isArray(d.javadsa_completed) ? d.javadsa_completed.length : (existing ? existing.javadsa_count : 0))),
+          dbmsword_count: Number(d.dbmsword_count || (Array.isArray(d.dbmsword_completed) ? d.dbmsword_completed.length : (existing ? existing.dbmsword_count : 0))),
+          createdAt: d.createdAt || (existing ? existing.createdAt : ''),
           last_active: d.last_updated ? (d.last_updated.toDate ? d.last_updated.toDate().toLocaleString() : String(d.last_updated)) : (existing ? existing.last_active : 'Recently Active'),
           spin_prize: d.spin_prize || (existing ? existing.spin_prize : 'Claimed')
         };
@@ -3724,6 +4113,9 @@ async function loadAdminDashboardData() {
       uid: currentUser.uid || 'local_user',
       name: currentUser.name || 'Scholar',
       email: currentUser.email,
+      photoUrl: currentUser.avatar || '',
+      linkedinUrl: '',
+      githubUrl: '',
       day1_score: null, day1_passed: false, day1_attempts: 0,
       day2_score: null, day2_passed: false, day2_attempts: 0,
       day3_score: null, day3_passed: false, day3_attempts: 0,
@@ -3732,10 +4124,18 @@ async function loadAdminDashboardData() {
       mock3_score: null, mock3_passed: false, mock3_attempts: 0,
       mock4_score: null, mock4_passed: false, mock4_attempts: 0,
       mock5_score: null, mock5_passed: false, mock5_attempts: 0,
+      foundations_count: 0,
       level0_count: 0,
+      javadsa_count: 0,
+      dbmsword_count: 0,
       spin_prize: 'Pending',
       last_active: 'Active Now'
     };
+
+    existing.linkedinUrl = currentUser.linkedinUrl || localStorage.getItem(`learner_linkedin_${currentUser.email}`) || existing.linkedinUrl || '';
+    existing.githubUrl = currentUser.githubUrl || localStorage.getItem(`learner_github_${currentUser.email}`) || existing.githubUrl || '';
+    existing.photoUrl = currentUser.avatar || existing.photoUrl || '';
+    existing.name = currentUser.name || existing.name;
 
     const d1p = localStorage.getItem('day_1_passed') === 'true';
     const d2p = localStorage.getItem('day_2_passed') === 'true';
@@ -3753,7 +4153,6 @@ async function loadAdminDashboardData() {
     if (localStorage.getItem('day_3_score')) existing.day3_score = Number(localStorage.getItem('day_3_score'));
     existing.day3_attempts = Math.max(existing.day3_attempts || 0, Number(localStorage.getItem('day_3_attempts') || 0));
 
-    // Overlay 5 Mock Assessments from local storage
     for (let m = 1; m <= 5; m++) {
       const s = localStorage.getItem(`mock_${m}_score`);
       if (s !== null) {
@@ -3763,13 +4162,18 @@ async function loadAdminDashboardData() {
       }
     }
 
-    try {
-      const savedLvl0 = localStorage.getItem('level0_completed_exercises');
-      if (savedLvl0) {
-        const arr = JSON.parse(savedLvl0);
-        existing.level0_count = Math.max(existing.level0_count || 0, arr.length);
-      }
-    } catch (e) {}
+    const fCount = typeof foundationsSubmitted !== 'undefined' ? Object.values(foundationsSubmitted).filter(Boolean).length : 0;
+    existing.foundations_count = Math.max(existing.foundations_count || 0, fCount);
+
+    if (completedLevel0Ids) {
+      existing.level0_count = Math.max(existing.level0_count || 0, completedLevel0Ids.size);
+    }
+    if (typeof javaDsaCompletedSet !== 'undefined' && javaDsaCompletedSet) {
+      existing.javadsa_count = Math.max(existing.javadsa_count || 0, javaDsaCompletedSet.size);
+    }
+    if (typeof dbmsWordCompletedSet !== 'undefined' && dbmsWordCompletedSet) {
+      existing.dbmsword_count = Math.max(existing.dbmsword_count || 0, dbmsWordCompletedSet.size);
+    }
 
     const spin1 = localStorage.getItem(`spun_day_1_${currentUser.email}`);
     const spin2 = localStorage.getItem(`spun_day_2_${currentUser.email}`);
@@ -3789,7 +4193,7 @@ async function loadAdminDashboardData() {
   // Update last synced indicator
   const lastSyncLabel = document.getElementById('adminLastSyncedLabel');
   if (lastSyncLabel) {
-    lastSyncLabel.innerText = `Last live sync: ${new Date().toLocaleTimeString()} • Auto-refreshes every 5 mins`;
+    lastSyncLabel.innerText = `Live Firestore Synchronization Active • Sub-second sync • Last fetch: ${new Date().toLocaleTimeString()}`;
   }
 
   setTimeout(() => {
@@ -3814,13 +4218,13 @@ function updateAdminMetrics() {
   let d3Passed = 0, d3Attempted = 0;
 
   adminLearnersData.forEach(lrn => {
-    if (lrn.day1_score !== null) { allScores.push(lrn.day1_score); totalExams++; d1Attempted++; }
+    if (lrn.day1_score !== null && lrn.day1_score !== undefined) { allScores.push(lrn.day1_score); totalExams++; d1Attempted++; }
     if (lrn.day1_passed) d1Passed++;
 
-    if (lrn.day2_score !== null) { allScores.push(lrn.day2_score); totalExams++; d2Attempted++; }
+    if (lrn.day2_score !== null && lrn.day2_score !== undefined) { allScores.push(lrn.day2_score); totalExams++; d2Attempted++; }
     if (lrn.day2_passed) d2Passed++;
 
-    if (lrn.day3_score !== null) { allScores.push(lrn.day3_score); totalExams++; d3Attempted++; }
+    if (lrn.day3_score !== null && lrn.day3_score !== undefined) { allScores.push(lrn.day3_score); totalExams++; d3Attempted++; }
     if (lrn.day3_passed) d3Passed++;
 
     if (lrn.day1_passed && lrn.day2_passed && lrn.day3_passed) {
@@ -3892,6 +4296,12 @@ function filterAdminLearnerTable() {
     if (filter === 'in_progress') {
       return !(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
     }
+    if (filter === 'has_linkedin') {
+      return Boolean(lrn.linkedinUrl && lrn.linkedinUrl.trim().length > 0);
+    }
+    if (filter === 'has_github') {
+      return Boolean(lrn.githubUrl && lrn.githubUrl.trim().length > 0);
+    }
     return true;
   });
 
@@ -3902,7 +4312,7 @@ function filterAdminLearnerTable() {
   if (filtered.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="13" class="p-8 text-center text-slate-500">
+        <td colspan="12" class="p-8 text-center text-slate-500">
           No learner records matching filter criteria.
         </td>
       </tr>
@@ -3913,11 +4323,13 @@ function filterAdminLearnerTable() {
   tableBody.innerHTML = filtered.map(lrn => {
     const isCert = Boolean(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
     const lvl0 = lrn.level0_count || 0;
-    const spinPrize = lrn.spin_prize || 'No spin recorded';
+    const fCount = lrn.foundations_count || 0;
+    const javaCount = lrn.javadsa_count || 0;
+    const dbmsCount = lrn.dbmsword_count || 0;
 
     const renderScoreCell = (score, passed, attempts) => {
       if (score === null || score === undefined) {
-        return `<span class="text-slate-500 font-mono text-[11px]">— Not Started —</span>`;
+        return `<span class="text-slate-500 font-mono text-[11px]">— Not Taken —</span>`;
       }
       const badgeClass = passed 
         ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" 
@@ -3932,73 +4344,267 @@ function filterAdminLearnerTable() {
       `;
     };
 
-    const renderMockScoreCell = (score, passed, attempts) => {
-      if (score === null || score === undefined) {
-        return `<span class="text-slate-500 font-mono text-[11px]">—</span>`;
+    let mocksAttempted = 0;
+    let mocksPassed = 0;
+    let totalMockPct = 0;
+    for (let m = 1; m <= 5; m++) {
+      if (lrn[`mock${m}_score`] !== null && lrn[`mock${m}_score`] !== undefined) {
+        mocksAttempted++;
+        if (lrn[`mock${m}_passed`]) mocksPassed++;
+        totalMockPct += (lrn[`mock${m}_score`] / 25) * 100;
       }
-      const pct = Math.round((score / 25) * 100);
-      const badgeClass = passed 
-        ? "bg-teal-500/15 border-teal-500/30 text-teal-300" 
-        : "bg-rose-500/15 border-rose-500/30 text-rose-300";
-      return `
-        <div class="inline-flex flex-col items-center">
-          <span class="px-2 py-0.5 rounded border ${badgeClass} font-mono font-bold text-[11px]">
-            ${score}/25 (${pct}%)
-          </span>
-          <span class="text-[9px] ${passed ? 'text-teal-400' : 'text-slate-500'} mt-0.5 font-mono">
-            ${passed ? 'PASS' : 'RETRY'} • Att: ${attempts || 1}
-          </span>
-        </div>
-      `;
-    };
+    }
+    const mockAvg = mocksAttempted > 0 ? Math.round(totalMockPct / mocksAttempted) : 0;
+    const mockBadgeClass = mocksAttempted === 0 
+      ? "text-slate-500" 
+      : (mocksPassed === 5 ? "bg-teal-500/20 text-teal-300 border-teal-500/40" : "bg-cyan-500/15 text-cyan-300 border-cyan-500/30");
+
+    const identifier = escapeHtml(lrn.uid || lrn.email);
 
     return `
       <tr class="hover:bg-slate-800/40 transition">
+        <!-- Scholar & Profiles -->
         <td class="p-3">
           <div class="flex items-center space-x-2.5">
             ${lrn.photoUrl ? `
-              <img src="${escapeHtml(lrn.photoUrl)}" alt="${escapeHtml(lrn.name)}" class="w-7 h-7 rounded-full border border-indigo-400 object-cover shrink-0" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
-              <div class="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 hidden items-center justify-center font-bold text-xs uppercase shrink-0">
+              <img src="${escapeHtml(lrn.photoUrl)}" alt="${escapeHtml(lrn.name)}" class="w-8 h-8 rounded-full border border-indigo-400 object-cover shrink-0" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+              <div class="w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 hidden items-center justify-center font-bold text-xs uppercase shrink-0">
                 ${escapeHtml((lrn.name || 'S').charAt(0))}
               </div>
             ` : `
-              <div class="w-7 h-7 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+              <div class="w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-400 text-indigo-200 flex items-center justify-center font-bold text-xs uppercase shrink-0">
                 ${escapeHtml((lrn.name || 'S').charAt(0))}
               </div>
             `}
             <div class="min-w-0">
-              <p class="font-bold text-white text-xs truncate">${escapeHtml(lrn.name)}</p>
+              <p class="font-bold text-white text-xs truncate cursor-pointer hover:text-indigo-400 transition" onclick="inspectLearnerDossier('${identifier}')" title="Click to inspect dossier">${escapeHtml(lrn.name)}</p>
               <p class="text-[10px] text-slate-400 truncate">${escapeHtml(lrn.email)}</p>
+              <div class="flex items-center gap-1.5 mt-1">
+                ${lrn.linkedinUrl ? `
+                  <a href="${escapeHtml(lrn.linkedinUrl)}" target="_blank" rel="noopener noreferrer" class="px-1.5 py-0.5 rounded bg-sky-950 border border-sky-800 text-sky-400 hover:text-sky-300 text-[10px] flex items-center gap-1" title="Open LinkedIn Profile">
+                    <i class="fa-brands fa-linkedin text-[10px]"></i> LinkedIn
+                  </a>
+                ` : `
+                  <span class="text-[9px] text-slate-600 font-mono">No LinkedIn</span>
+                `}
+                ${lrn.githubUrl ? `
+                  <a href="${escapeHtml(lrn.githubUrl)}" target="_blank" rel="noopener noreferrer" class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-slate-300 hover:text-white text-[10px] flex items-center gap-1" title="Open GitHub Profile">
+                    <i class="fa-brands fa-github text-[10px]"></i> GitHub
+                  </a>
+                ` : `
+                  <span class="text-[9px] text-slate-600 font-mono">No GitHub</span>
+                `}
+              </div>
             </div>
           </div>
         </td>
+
+        <!-- Day 1 Exam -->
         <td class="p-3 text-center">${renderScoreCell(lrn.day1_score, lrn.day1_passed, lrn.day1_attempts)}</td>
+
+        <!-- Day 2 Exam -->
         <td class="p-3 text-center">${renderScoreCell(lrn.day2_score, lrn.day2_passed, lrn.day2_attempts)}</td>
+
+        <!-- Day 3 Exam -->
         <td class="p-3 text-center">${renderScoreCell(lrn.day3_score, lrn.day3_passed, lrn.day3_attempts)}</td>
-        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock1_score, lrn.mock1_passed, lrn.mock1_attempts)}</td>
-        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock2_score, lrn.mock2_passed, lrn.mock2_attempts)}</td>
-        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock3_score, lrn.mock3_passed, lrn.mock3_attempts)}</td>
-        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock4_score, lrn.mock4_passed, lrn.mock4_attempts)}</td>
-        <td class="p-3 text-center">${renderMockScoreCell(lrn.mock5_score, lrn.mock5_passed, lrn.mock5_attempts)}</td>
+
+        <!-- Mock Series -->
         <td class="p-3 text-center">
-          <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-950 border border-slate-700 text-amber-300 font-mono text-[10px]">
-            <i class="fa-solid fa-microchip text-[9px]"></i> ${lvl0}/25 Done
-          </div>
+          ${mocksAttempted > 0 ? `
+            <div class="inline-flex flex-col items-center">
+              <span class="px-2 py-0.5 rounded border ${mockBadgeClass} font-mono font-bold text-[10px]">
+                ${mocksPassed}/5 Passed (${mockAvg}%)
+              </span>
+              <span class="text-[9px] text-slate-500 mt-0.5 font-mono">${mocksAttempted}/5 Attempted</span>
+            </div>
+          ` : `
+            <span class="text-slate-500 font-mono text-[11px]">—</span>
+          `}
         </td>
+
+        <!-- Foundations Hub (5 Modules) -->
         <td class="p-3 text-center">
-          <span class="text-[10px] text-slate-300 font-medium">${escapeHtml(spinPrize)}</span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded ${fCount >= 5 ? 'bg-indigo-500/20 border border-indigo-500/40 text-indigo-300' : 'bg-slate-950 border border-slate-800 text-slate-400'} font-mono text-[10px] font-bold">
+            <i class="fa-solid fa-shapes text-[9px] text-indigo-400"></i> ${fCount}/5 Done
+          </span>
         </td>
+
+        <!-- Level 0 Labs (25 Labs) -->
+        <td class="p-3 text-center">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded ${lvl0 >= 25 ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300' : 'bg-slate-950 border border-slate-800 text-slate-400'} font-mono text-[10px] font-bold">
+            <i class="fa-solid fa-microchip text-[9px] text-amber-400"></i> ${lvl0}/25 Done
+          </span>
+        </td>
+
+        <!-- Java DSA (25 Progs) -->
+        <td class="p-3 text-center">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded ${javaCount >= 25 ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300' : 'bg-slate-950 border border-slate-800 text-slate-400'} font-mono text-[10px] font-bold">
+            <i class="fa-solid fa-code text-[9px] text-emerald-400"></i> ${javaCount}/25 Done
+          </span>
+        </td>
+
+        <!-- DBMS & MS-Word (10 Labs) -->
+        <td class="p-3 text-center">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded ${dbmsCount >= 10 ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300' : 'bg-slate-950 border border-slate-800 text-slate-400'} font-mono text-[10px] font-bold">
+            <i class="fa-solid fa-database text-[9px] text-cyan-400"></i> ${dbmsCount}/10 Done
+          </span>
+        </td>
+
+        <!-- Milestone Status -->
         <td class="p-3 text-center">
           ${isCert 
             ? `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-[10px] flex items-center justify-center gap-1"><i class="fa-solid fa-crown text-[9px]"></i> Certified</span>` 
             : `<span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px]">In Progress</span>`}
         </td>
-        <td class="p-3 text-right text-[10px] text-slate-400 font-mono">
+
+        <!-- Last Login Time -->
+        <td class="p-3 text-center text-[10px] text-slate-400 font-mono">
           ${escapeHtml(lrn.last_active || 'Recent')}
+        </td>
+
+        <!-- Action / Dossier Button -->
+        <td class="p-3 text-center">
+          <button onclick="inspectLearnerDossier('${identifier}')" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-indigo-500/40 font-bold text-[10px] transition flex items-center gap-1 mx-auto" title="Open complete 360-degree scholar dossier">
+            <i class="fa-solid fa-eye text-[9px]"></i> Dossier
+          </button>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+function inspectLearnerDossier(identifier) {
+  if (!adminLearnersData || adminLearnersData.length === 0) return;
+  const lrn = adminLearnersData.find(s => s.uid === identifier || s.email === identifier) || adminLearnersData[0];
+  if (!lrn) return;
+
+  currentInspectedScholar = lrn;
+
+  const modal = document.getElementById('adminLearnerDossierModal');
+  if (!modal) return;
+
+  const nameEl = document.getElementById('dossierName');
+  const emailEl = document.getElementById('dossierEmail');
+  const uidEl = document.getElementById('dossierUid');
+  const avatarEl = document.getElementById('dossierAvatar');
+  const certBadge = document.getElementById('dossierCertBadge');
+  const linkedinBtn = document.getElementById('dossierLinkedinLink');
+  const githubBtn = document.getElementById('dossierGithubLink');
+  const lastActiveEl = document.getElementById('dossierLastActive');
+  const createdAtEl = document.getElementById('dossierCreatedAt');
+
+  if (nameEl) nameEl.innerText = lrn.name || 'Scholar';
+  if (emailEl) emailEl.innerText = lrn.email || 'N/A';
+  if (uidEl) uidEl.innerText = 'UID: ' + (lrn.uid || 'N/A');
+  if (avatarEl) {
+    avatarEl.src = lrn.photoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(lrn.name || 'S')}&backgroundColor=4f46e5`;
+  }
+
+  const isCert = Boolean(lrn.day1_passed && lrn.day2_passed && lrn.day3_passed);
+  if (certBadge) {
+    certBadge.className = isCert 
+      ? 'px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold'
+      : 'px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold';
+    certBadge.innerText = isCert ? '👑 Master Certified' : 'In Progress';
+  }
+
+  if (linkedinBtn) {
+    if (lrn.linkedinUrl) {
+      linkedinBtn.href = lrn.linkedinUrl;
+      linkedinBtn.className = 'px-3 py-1.5 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 border border-sky-500/30 text-xs font-bold transition flex items-center gap-1.5';
+      linkedinBtn.innerHTML = '<i class="fa-brands fa-linkedin"></i> <span>LinkedIn Profile</span>';
+    } else {
+      linkedinBtn.href = '#';
+      linkedinBtn.className = 'px-3 py-1.5 rounded-xl bg-slate-800 text-slate-500 border border-slate-700 text-xs font-medium cursor-not-allowed flex items-center gap-1.5';
+      linkedinBtn.innerHTML = '<i class="fa-brands fa-linkedin"></i> <span>LinkedIn: Not Added</span>';
+    }
+  }
+
+  if (githubBtn) {
+    if (lrn.githubUrl) {
+      githubBtn.href = lrn.githubUrl;
+      githubBtn.className = 'px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5';
+      githubBtn.innerHTML = '<i class="fa-brands fa-github"></i> <span>GitHub Profile</span>';
+    } else {
+      githubBtn.href = '#';
+      githubBtn.className = 'px-3 py-1.5 rounded-xl bg-slate-800 text-slate-500 border border-slate-700 text-xs font-medium cursor-not-allowed flex items-center gap-1.5';
+      githubBtn.innerHTML = '<i class="fa-brands fa-github"></i> <span>GitHub: Not Added</span>';
+    }
+  }
+
+  if (lastActiveEl) lastActiveEl.innerText = lrn.last_active || 'Recently Active';
+  if (createdAtEl) {
+    let createdStr = 'Bootcamp Batch 2026';
+    if (lrn.createdAt) {
+      const ts = Number(lrn.createdAt);
+      if (!isNaN(ts) && ts > 0) createdStr = new Date(ts).toLocaleString();
+    }
+    createdAtEl.innerText = createdStr;
+  }
+
+  // 3 Days Exam Matrix
+  [1, 2, 3].forEach(d => {
+    const score = lrn[`day${d}_score`];
+    const passed = Boolean(lrn[`day${d}_passed`]);
+    const att = lrn[`day${d}_attempts`] || 0;
+    const scoreEl = document.getElementById(`dossierDay${d}Score`);
+    const metaEl = document.getElementById(`dossierDay${d}Meta`);
+    if (scoreEl) {
+      if (score === null || score === undefined) {
+        scoreEl.innerText = '—';
+        scoreEl.className = 'text-base font-black font-mono text-slate-500';
+      } else {
+        scoreEl.innerText = `${score}/100 (${passed ? 'PASS' : 'RETRY'})`;
+        scoreEl.className = `text-base font-black font-mono ${passed ? 'text-emerald-400' : 'text-rose-400'}`;
+      }
+    }
+    if (metaEl) metaEl.innerText = `Attempts: ${att} • Pass Mark: ≥90%`;
+  });
+
+  // 5 Mocks Matrix
+  for (let m = 1; m <= 5; m++) {
+    const s = lrn[`mock${m}_score`];
+    const p = Boolean(lrn[`mock${m}_passed`]);
+    const mEl = document.getElementById(`dossierMock${m}Score`);
+    if (mEl) {
+      if (s === null || s === undefined) {
+        mEl.innerText = '—';
+        mEl.className = 'font-black text-slate-500 mt-1';
+      } else {
+        const pct = Math.round((s / 25) * 100);
+        mEl.innerText = `${s}/25 (${pct}%)`;
+        mEl.className = `font-black mt-1 ${p ? 'text-teal-400' : 'text-rose-400'}`;
+      }
+    }
+  }
+
+  // Modules Breakdown
+  const fEl = document.getElementById('dossierFoundations');
+  const l0El = document.getElementById('dossierLevel0');
+  const javaEl = document.getElementById('dossierJavaDsa');
+  const dbmsEl = document.getElementById('dossierDbmsWord');
+
+  if (fEl) fEl.innerText = `${lrn.foundations_count || 0}/5 Modules`;
+  if (l0El) l0El.innerText = `${lrn.level0_count || 0}/25 Labs`;
+  if (javaEl) javaEl.innerText = `${lrn.javadsa_count || 0}/25 Progs`;
+  if (dbmsEl) dbmsEl.innerText = `${lrn.dbmsword_count || 0}/10 Labs`;
+
+  modal.classList.remove('hidden');
+}
+
+function closeAdminLearnerDossierModal() {
+  const modal = document.getElementById('adminLearnerDossierModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function copyDossierJson() {
+  if (!currentInspectedScholar) return;
+  const json = JSON.stringify(currentInspectedScholar, null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    showToastNotification("Copied Dossier", "Scholar telemetry JSON copied to clipboard!");
+  }).catch(() => {
+    alert("Copied to clipboard!");
+  });
 }
 
 function escapeHtml(str) {
@@ -4023,11 +4629,16 @@ function downloadDayReport(dayNum) {
     "Learner ID",
     "Scholar Name",
     "Google Email",
+    "LinkedIn Profile URL",
+    "GitHub Profile URL",
     `Day ${dayNum} Score (out of 100)`,
     `Day ${dayNum} Percentage`,
     `Day ${dayNum} Examination Status`,
     `Day ${dayNum} Attempts Used`,
-    "Level 0 Lab Exercises (out of 25)",
+    "Foundations Modules Completed (of 5)",
+    "Level 0 Lab Exercises (of 25)",
+    "Java DSA Solved (of 25)",
+    "DBMS & Word Labs (of 10)",
     "Daily Spin Reward Claimed",
     "Last Active Timestamp"
   ];
@@ -4043,11 +4654,16 @@ function downloadDayReport(dayNum) {
       lrn.uid,
       lrn.name,
       lrn.email,
+      lrn.linkedinUrl || "N/A",
+      lrn.githubUrl || "N/A",
       score === null ? "N/A" : score,
       pct,
       status,
       attempts,
+      `${lrn.foundations_count || 0}/5`,
       `${lrn.level0_count || 0}/25`,
+      `${lrn.javadsa_count || 0}/25`,
+      `${lrn.dbmsword_count || 0}/10`,
       lrn.spin_prize || "N/A",
       lrn.last_active || "N/A"
     ];
@@ -4068,6 +4684,8 @@ function downloadMockAssessmentsReport() {
     "Learner ID",
     "Scholar Name",
     "Google Email",
+    "LinkedIn Profile URL",
+    "GitHub Profile URL",
     "Mock 1 Score (out of 25)",
     "Mock 1 Percentage",
     "Mock 1 Status (≥90%)",
@@ -4090,6 +4708,9 @@ function downloadMockAssessmentsReport() {
     "Mock 5 Attempts",
     "Series Average Percentage",
     "Mocks Passed (out of 5)",
+    "Foundations Modules Done",
+    "Java DSA Programs Done",
+    "DBMS & Word Labs Done",
     "Last Active Timestamp"
   ];
 
@@ -4124,6 +4745,8 @@ function downloadMockAssessmentsReport() {
       lrn.uid,
       lrn.name,
       lrn.email,
+      lrn.linkedinUrl || "N/A",
+      lrn.githubUrl || "N/A",
       ...formatMock(1),
       ...formatMock(2),
       ...formatMock(3),
@@ -4131,6 +4754,9 @@ function downloadMockAssessmentsReport() {
       ...formatMock(5),
       seriesAvg,
       `${passedCount}/5`,
+      `${lrn.foundations_count || 0}/5`,
+      `${lrn.javadsa_count || 0}/25`,
+      `${lrn.dbmsword_count || 0}/10`,
       lrn.last_active || "N/A"
     ];
   });
@@ -4150,6 +4776,8 @@ function downloadConsolidatedReport() {
     "Learner ID",
     "Scholar Name",
     "Google Email",
+    "LinkedIn Profile URL",
+    "GitHub Profile URL",
     "Day 1 Score",
     "Day 1 Passed",
     "Day 1 Attempts",
@@ -4171,7 +4799,10 @@ function downloadConsolidatedReport() {
     "Mock 5 Score (of 25)",
     "Mock 5 Passed",
     "Mock Series Avg (%)",
-    "Level 0 Lab Completed (of 25)",
+    "Foundations Modules (of 5)",
+    "Level 0 Lab (of 25)",
+    "Java DSA Programs (of 25)",
+    "DBMS & Word Labs (of 10)",
     "Day 1 Badge Earned",
     "Day 2 Badge Earned",
     "Day 3 Badge Earned",
@@ -4204,6 +4835,8 @@ function downloadConsolidatedReport() {
       lrn.uid,
       lrn.name,
       lrn.email,
+      lrn.linkedinUrl || "N/A",
+      lrn.githubUrl || "N/A",
       lrn.day1_score !== null && lrn.day1_score !== undefined ? lrn.day1_score : "N/A",
       lrn.day1_passed ? "YES" : "NO",
       lrn.day1_attempts || 0,
@@ -4220,7 +4853,10 @@ function downloadConsolidatedReport() {
       ...formatMockVal(4),
       ...formatMockVal(5),
       mockAvg,
+      `${lrn.foundations_count || 0}/5`,
       `${lrn.level0_count || 0}/25`,
+      `${lrn.javadsa_count || 0}/25`,
+      `${lrn.dbmsword_count || 0}/10`,
       lrn.day1_passed ? "EARNED" : "LOCKED",
       lrn.day2_passed ? "EARNED" : "LOCKED",
       lrn.day3_passed ? "EARNED" : "LOCKED",
