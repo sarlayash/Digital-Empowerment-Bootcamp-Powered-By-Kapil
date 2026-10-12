@@ -8,6 +8,8 @@
       "server.js",
       "build_full_database.py",
       "generate_day1.py",
+      "*.py",
+      "test_aptitude_suite.js",
       "users.json"
     ],
     "headers": [
