@@ -1,8 +1,5 @@
-// ========================================================
-// REAL FIREBASE AUTHENTICATION SCHOLAR ROSTER
-// Ground truth accounts from Google Firebase Authentication Console
-// Total Verified Scholars: 37
-// ========================================================
+// Master Verified Firebase Authentication Console Roster
+// Total Accounts: 37 Verified Google Authentication Accounts
 window.FIREBASE_AUTH_ROSTER = [
   {
     "uid": "0789UtgyfVSiq2kDMeuQpFRpNGj2",
@@ -42,7 +39,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "199SI0s9lqcJmJRUm3My5NeJ1IF3",
@@ -82,7 +84,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "2peT1aQW5wgiF4yBHGXNOvKs9lf1",
@@ -122,7 +129,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "37QnrpXLJ6ZjWdkSAlM0ynWQt1C3",
@@ -162,7 +174,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "3nqhba1g5thR0y02vvcGrF5bWsI2",
@@ -202,7 +219,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "5L8mS0XuGuUQ1sJQVdpaeuyDGdL2",
@@ -242,7 +264,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "8GV1h3oy54YZxe0Z7CyLNygtNiF3",
@@ -282,7 +309,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "9nStR0yJHwVRdokZHbJJFQRVnUZ2",
@@ -322,7 +354,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "BgrSBzIR5dV4FLyIPLexudueExp1",
@@ -362,7 +399,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "CNGHzSW7fVSldjiT2kEF4qH531a2",
@@ -402,7 +444,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "DaJnBEfqHKNAKzHOjXLTmlTwk3a2",
@@ -442,7 +489,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "ES7nLNRObNRnDT5V47veSsBzUve2",
@@ -482,7 +534,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "F5b9RGLtn7M0rZzlYUjl9teeAo03",
@@ -522,7 +579,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "Hq9dZ2L9tiZzUh7zThYn3cQlPlA2",
@@ -562,7 +624,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "Kh7kZFhsm3QyC7lm0cGmtf3zTwC2",
@@ -602,7 +669,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "LScF1oWFY5XTitj0OhnJXWMcOt52",
@@ -642,7 +714,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "NWBdMBZz7HPEiJnxn1UaAlXC4lJ3",
@@ -682,7 +759,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "Ny1F4tmiLVNtP8Gh4OSIeLsv2fR2",
@@ -722,7 +804,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "https://github.com/kapilnarula",
     "foundations_count": 5,
     "javadsa_count": 25,
-    "dbmsword_count": 10
+    "dbmsword_count": 10,
+    "aptitude_score": 285,
+    "aptitude_passed": true,
+    "aptitude_attempts": 1,
+    "aptitude_examples_count": 100,
+    "aptitude_tips_count": 50
   },
   {
     "uid": "OtTpsMiYYYYLbFoVddWcd8zODmY2",
@@ -762,7 +849,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "TdBrRtKd9sXOzP4v48D5rKo1uPA3",
@@ -802,7 +894,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "U95q6VriCPZSGcXxeq28M9xyPvl2",
@@ -842,7 +939,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "Zp5zd740h4S2UxA3N6cPzkjWV4G3",
@@ -882,7 +984,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "amhNLTHjJEQNEjFflILxzadfRAJ2",
@@ -922,7 +1029,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "cFaYm33QDdW4TZTaaNiSj9FisXg1",
@@ -962,7 +1074,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "cMXs15iIxFNZRBE1Cpp8l4EhL4P2",
@@ -1002,7 +1119,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "hWebDBaWWQRzPyUerPANFX7Jgvk2",
@@ -1042,7 +1164,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "jiYJI1oAmUQQ9BUIEvsQ7JfxOuB3",
@@ -1082,7 +1209,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "lEuqqUU8uuVjxExf2vCkwBlZbfh2",
@@ -1122,7 +1254,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "mH0S9fd4eEav5LJ6rXZJNoDMIo62",
@@ -1162,7 +1299,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "ohKlBqoyZuh9w4gIBODuJ72J2k92",
@@ -1202,7 +1344,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "s2oa9gV264MfRz5ui8fSKslglBV2",
@@ -1242,7 +1389,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "tsULRSgJfNXUE9M7Qt2K9oJMzmy2",
@@ -1282,7 +1434,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "uDmWQ80hofUyRQUy6kzjx56kaxv2",
@@ -1322,7 +1479,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "uqZSlQD5SlTvpah5WOt9kE64K3C3",
@@ -1362,7 +1524,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "vc5zv6UX8JSw96Hcp9uPlYmLdv92",
@@ -1402,7 +1569,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "xX3XL9GrryQwsD16EyJz9cHpAJo1",
@@ -1442,7 +1614,12 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   },
   {
     "uid": "y08i0nclg7b76W1ZCxr7kQT6YuG3",
@@ -1482,6 +1659,15 @@ window.FIREBASE_AUTH_ROSTER = [
     "githubUrl": "",
     "foundations_count": 0,
     "javadsa_count": 0,
-    "dbmsword_count": 0
+    "dbmsword_count": 0,
+    "aptitude_score": null,
+    "aptitude_passed": false,
+    "aptitude_attempts": 0,
+    "aptitude_examples_count": 0,
+    "aptitude_tips_count": 0
   }
 ];
+
+function getFirebaseAuthRoster() {
+  return window.FIREBASE_AUTH_ROSTER || [];
+}
